@@ -55,7 +55,9 @@ Note that the initial sync can take some time depending on how many databases an
 ## Known Issues
 
 - Cannot specify a single database to sync
-- Only native SQL queries are supported
-  - Queries must not end with a semi-colon (`;`)
+- ~~Only native SQL queries are supported~~
+  - Native SQL Queries must not end with a semi-colon (`;`)
+  - Basic aggregations seem to work in the query builder
+  - Parameterized queries are not supported
 - Sometimes, the initial database verification can time out
   - If this happens, configure a higher timeout value with the `MB_DB_CONNECTION_TIMEOUT_MS` environment variable
