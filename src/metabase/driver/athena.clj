@@ -11,8 +11,10 @@
             [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [connection :as sql-jdbc.conn]
+             [execute :as sql-jdbc.execute]
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql.query-processor :as sql.qp]
+            [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.util
              [date :as du]
              [honeysql-extensions :as hx]
@@ -142,3 +144,13 @@
 (defmethod driver/describe-database :athena [driver database]
   {:tables (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
              (fast-active-tables driver metadata))})
+
+; Unsure if this is the right way to approach building the parameterized query...but it works
+(defn- prepare-query [driver {:keys [database settings], query :native, :as outer-query}]
+    (cond-> outer-query
+        (seq (:params query))
+        (merge {:native {:params nil
+                :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
+
+(defmethod driver/execute-query :athena [driver query]
+    (sql-jdbc.execute/execute-query driver (prepare-query driver, query)))
