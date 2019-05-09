@@ -59,6 +59,7 @@
     :varbinary  :type/*
     :boolean    :type/Boolean
     :char       :type/Text
+    :date       :type/Date
     :decimal    :type/Decimal
     :double     :type/Float
     :float      :type/Float
