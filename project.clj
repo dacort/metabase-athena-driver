@@ -1,4 +1,4 @@
-(defproject metabase/athena-driver "0.0.2-athena-jdbc-2.0.7"
+(defproject metabase/athena-driver "0.0.3-athena-jdbc-2.0.7"
   :min-lein-version "2.5.0"
 
   :dependencies
@@ -13,8 +13,7 @@
   {:provided
    {:dependencies
     [[org.clojure/clojure "1.10.0"]
-     [metabase-core "1.0.0-SNAPSHOT"]]
-   }
+     [metabase-core "1.0.0-SNAPSHOT"]]}
 
    :uberjar
    {:auto-clean    true
