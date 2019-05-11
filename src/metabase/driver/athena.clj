@@ -28,6 +28,7 @@
 ;;; |                                          metabase.driver method impls                                          |
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
+
 (defmethod driver/supports? [:athena :foreign-keys] [_ _] false)
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -71,7 +72,7 @@
     :struct     :type/*
     :timestamp  :type/DateTime
     :tinyint    :type/Integer
-    :varchar    :type/Text} database-type ))
+    :varchar    :type/Text} database-type))
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
 (defmethod unprepare/unprepare-value [:athena Date] [_ value]
@@ -131,37 +132,37 @@
 (defn describe-table-fields
   "Returns a set of column metadata for `schema` and `table-name` using `metadata`. "
   [^DatabaseMetaData metadata, driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
-  (try    
+  (try
     (with-open [rs (.getColumns metadata db-name-or-nil schema table-name nil)]
-        (set
-        (for [{database-type :type_name
-                column-name   :column_name
-                remarks       :remarks} (jdbc/metadata-result rs)]
-        (merge
-            {:name          column-name
-            :database-type database-type
-            :base-type     (database-type->base-type-or-warn driver database-type)}
-            (when (not (str/blank? remarks))
-            {:field-comment remarks})
-            ))))
+      (set
+       (for [{database-type :type_name
+              column-name   :column_name
+              remarks       :remarks} (jdbc/metadata-result rs)]
+         (merge
+          {:name          column-name
+           :database-type database-type
+           :base-type     (database-type->base-type-or-warn driver database-type)}
+          (when (not (str/blank? remarks))
+            {:field-comment remarks})))))
     (catch Throwable e
       (log/error e (trs "Error retreiving fields for DB {0}.{1}" schema table-name))
-      (throw e))
-  )
-)
+      (throw e))))
 
 
 ;; Becuse describe-table-fields might fail, we catch the error here and return an empty set of columns
+
+
 (defmethod driver/describe-table :athena [driver database table]
   (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
     (->> (assoc (select-keys table [:name :schema])
-           :fields (try
-            (describe-table-fields metadata driver table)
-            (catch Throwable e (set nil)))
-         ))))
+                :fields (try
+                          (describe-table-fields metadata driver table)
+                          (catch Throwable e (set nil)))))))
 
 
 ;; EXTERNAL_TABLE is required for Athena
+
+
 (defn- get-tables [^DatabaseMetaData metadata, ^String schema-or-nil, ^String db-name-or-nil]
   ;; tablePattern "%" = match all tables
   (with-open [rs (.getTables metadata db-name-or-nil schema-or-nil "%"
@@ -192,10 +193,10 @@
 
 ; Unsure if this is the right way to approach building the parameterized query...but it works
 (defn- prepare-query [driver {:keys [database settings], query :native, :as outer-query}]
-    (cond-> outer-query
-        (seq (:params query))
-        (merge {:native {:params nil
-                :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
+  (cond-> outer-query
+    (seq (:params query))
+    (merge {:native {:params nil
+                     :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
 
 (defmethod driver/execute-query :athena [driver query]
-    (sql-jdbc.execute/execute-query driver (prepare-query driver, query)))
+  (sql-jdbc.execute/execute-query driver (prepare-query driver, query)))
