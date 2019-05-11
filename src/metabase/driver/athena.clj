@@ -19,7 +19,7 @@
              [date :as du]
              [honeysql-extensions :as hx]
              [i18n :refer [trs]]])
-  (:import [java.sql DatabaseMetaData Timestamp]))
+  (:import [java.sql DatabaseMetaData Timestamp] java.util.Date java.sql.Time))
 
 (driver/register! :athena, :parent :sql-jdbc)
 
@@ -59,6 +59,7 @@
     :varbinary  :type/*
     :boolean    :type/Boolean
     :char       :type/Text
+    :date       :type/Date
     :decimal    :type/Decimal
     :double     :type/Float
     :float      :type/Float
@@ -71,6 +72,50 @@
     :timestamp  :type/DateTime
     :tinyint    :type/Integer
     :varchar    :type/Text} database-type ))
+
+;;; ------------------------------------------------- date functions -------------------------------------------------
+(defmethod unprepare/unprepare-value [:athena Date] [_ value]
+  (unprepare/unprepare-date-with-iso-8601-fn :from_iso8601_timestamp value))
+
+(prefer-method unprepare/unprepare-value [:sql Time] [:athena Date])
+
+; Helper function for truncating dates - currently unused
+(defn- date-trunc [unit expr] (hsql/call :date_trunc (hx/literal unit) expr))
+
+; Example of handling report timezone
+; (defn- date-trunc
+;   "date_trunc('interval', timezone, timestamp): truncates a timestamp to a given interval"
+;   [unit expr]
+;   (let [timezone (get-in sql.qp/*query* [:settings :report-timezone])]
+;     (if (nil? timezone)
+;       (hsql/call :date_trunc (hx/literal unit) expr)
+;       (hsql/call :date_trunc (hx/literal unit) timezone expr))))
+
+; Helper function to cast `expr` to a timestamp if necessary
+(defn- expr->literal [expr]
+  (if (instance? Timestamp expr)
+    expr
+    (hx/cast :timestamp expr)))
+
+; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
+; Ideally, we should make this conditional. There's a generic approach above, but different use cases should b tested.
+(defmethod sql.qp/date [:athena :minute]          [_ _ expr] (hsql/call :date_trunc (hx/literal :minute) (expr->literal expr)))
+(defmethod sql.qp/date [:athena :hour]            [_ _ expr] (hsql/call :date_trunc (hx/literal :hour) (expr->literal expr)))
+(defmethod sql.qp/date [:athena :day]             [_ _ expr] (hsql/call :date_trunc (hx/literal :day) expr))
+(defmethod sql.qp/date [:athena :week]            [_ _ expr] (hsql/call :date_trunc (hx/literal :week) expr))
+(defmethod sql.qp/date [:athena :month]           [_ _ expr] (hsql/call :date_trunc (hx/literal :month) expr))
+(defmethod sql.qp/date [:athena :quarter]         [_ _ expr] (hsql/call :date_trunc (hx/literal :quarter) expr))
+(defmethod sql.qp/date [:athena :year]            [_ _ expr] (hsql/call :date_trunc (hx/literal :year) expr))
+
+; Extraction functions
+(defmethod sql.qp/date [:athena :minute-of-hour]  [_ _ expr] (hsql/call :minute expr))
+(defmethod sql.qp/date [:athena :hour-of-day]     [_ _ expr] (hsql/call :hour expr))
+(defmethod sql.qp/date [:athena :day-of-week]     [_ _ expr] (hsql/call :day_of_week expr))
+(defmethod sql.qp/date [:athena :day-of-month]    [_ _ expr] (hsql/call :day_of_month expr))
+(defmethod sql.qp/date [:athena :day-of-year]     [_ _ expr] (hsql/call :day_of_year expr))
+(defmethod sql.qp/date [:athena :week-of-year]    [_ _ expr] (hsql/call :week_of_year expr))
+(defmethod sql.qp/date [:athena :month-of-year]   [_ _ expr] (hsql/call :month expr))
+(defmethod sql.qp/date [:athena :quarter-of-year] [_ _ expr] (hsql/call :quarter expr))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
