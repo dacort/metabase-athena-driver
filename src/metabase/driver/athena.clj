@@ -1,6 +1,7 @@
 (ns metabase.driver.athena
   (:refer-clojure :exclude [second])
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [metabase.driver.schema-parser :as schema-parser]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
@@ -18,7 +19,9 @@
             [metabase.util
              [date :as du]
              [honeysql-extensions :as hx]
-             [i18n :refer [trs]]])
+             [i18n :refer [trs]]]
+            [metabase.util :as u]
+            [clojure.string :as string])
   (:import [java.sql DatabaseMetaData Timestamp] java.util.Date java.sql.Time))
 
 (driver/register! :athena, :parent :sql-jdbc)
@@ -69,7 +72,7 @@
     :map        :type/*
     :smallint   :type/Integer
     :string     :type/Text
-    :struct     :type/*
+    :struct     :type/Dictionary
     :timestamp  :type/DateTime
     :tinyint    :type/Integer
     :varchar    :type/Text} database-type))
@@ -127,23 +130,44 @@
                             database-type))
           :type/*)))
 
+(defn- run-query
+  "Workaround for avoiding the usage of 'advance' jdbc feature that are not implemented by the driver yet.
+   Such as prepare statement"
+  [database query]
+  (log/infof "Running Athena query : '%s'..." query)
+  (try
+    (jdbc/query (sql-jdbc.conn/db->pooled-connection-spec database) (string/replace query ";" " ") {:raw? true})
+    (catch Exception e
+      (log/error (u/format-color 'red "Failed to execute query: %s %s" query (.getMessage e))))))
+
+(defn- describe-database->clj
+  "Workaround for wrong getColumnCount response by the driver"
+  [rs]
+  {:name (string/trim (:col_name rs))
+   :type (string/trim (:data_type rs))})
+
+(defn describe-all-database->clj
+  [result]
+  (->> result
+       (remove #(= (:col_name %) ""))
+       (remove #(= (:col_name %) nil))
+       (remove #(= (:data_type %) nil))
+       (remove #(string/starts-with? (:col_name %) "#")) ; remove comment
+       (distinct) ; driver can return twice the partitioning fields
+       (map describe-database->clj)))
+
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
 (defn describe-table-fields
   "Returns a set of column metadata for `schema` and `table-name` using `metadata`. "
-  [^DatabaseMetaData metadata, driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
+  [^DatabaseMetaData metadata, database,  driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
   (try
-    (with-open [rs (.getColumns metadata db-name-or-nil schema table-name nil)]
-      (set
-       (for [{database-type :type_name
-              column-name   :column_name
-              remarks       :remarks} (jdbc/metadata-result rs)]
-         (merge
-          {:name          column-name
-           :database-type database-type
-           :base-type     (database-type->base-type-or-warn driver database-type)}
-          (when (not (str/blank? remarks))
-            {:field-comment remarks})))))
+    (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
+         (describe-all-database->clj)
+         (set)
+         (map schema-parser/parse-schema)
+         (doall)
+         (set))
     (catch Throwable e
       (log/error e (trs "Error retreiving fields for DB {0}.{1}" schema table-name))
       (throw e))))
@@ -156,7 +180,7 @@
   (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
     (->> (assoc (select-keys table [:name :schema])
                 :fields (try
-                          (describe-table-fields metadata driver table)
+                          (describe-table-fields metadata database driver table)
                           (catch Throwable e (set nil)))))))
 
 
