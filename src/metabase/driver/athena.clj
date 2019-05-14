@@ -146,7 +146,7 @@
   {:name (string/trim (:col_name rs))
    :type (string/trim (:data_type rs))})
 
-(defn describe-all-database->clj
+(defn remove-invalid-columns
   [result]
   (->> result
        (remove #(= (:col_name %) ""))
@@ -156,18 +156,21 @@
        (distinct) ; driver can return twice the partitioning fields
        (map describe-database->clj)))
 
+(defn sync-table-with-nested-field [database schema table-name]
+  (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
+       (remove-invalid-columns)
+       (set)
+       (map schema-parser/parse-schema)
+       (doall)
+       (set)))
+
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
 (defn describe-table-fields
   "Returns a set of column metadata for `schema` and `table-name` using `metadata`. "
   [^DatabaseMetaData metadata, database,  driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
   (try
-    (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
-         (describe-all-database->clj)
-         (set)
-         (map schema-parser/parse-schema)
-         (doall)
-         (set))
+    (sync-table-with-nested-field database schema table-name)
     (catch Throwable e
       (log/error e (trs "Error retreiving fields for DB {0}.{1}" schema table-name))
       (throw e))))
