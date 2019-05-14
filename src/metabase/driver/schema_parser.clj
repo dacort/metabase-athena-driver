@@ -53,9 +53,7 @@
      :nested-fields (create-nested-fields schema)}))
 
 (defn- parse-array-type-field [field-info]
-  (let [root-field-name (:name field-info)
-        schema (hsp/hive-schema->map (:type field-info))]
-    {:name root-field-name :base-type :type/Array :database-type "array"}))
+  {:name (:name field-info) :base-type :type/Array :database-type "array"})
 
 (defn- is-struct-type-field? [field-info]
   (clojure.string/starts-with? (:type field-info) "struct"))
