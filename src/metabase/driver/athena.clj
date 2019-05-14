@@ -159,18 +159,36 @@
 (defn sync-table-with-nested-field [database schema table-name]
   (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
        (remove-invalid-columns)
-       (set)
        (map schema-parser/parse-schema)
        (doall)
        (set)))
 
+(defn sync-table-without-nested-field [driver columns]
+  (set
+    (for [{database-type :type_name
+           column-name   :column_name
+           remarks       :remarks} columns]
+      (merge
+        {:name          column-name
+         :database-type database-type
+         :base-type     (database-type->base-type-or-warn driver database-type)}
+        (when (not (str/blank? remarks))
+          {:field-comment remarks})))))
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
+
+(defn table-has-nested-fields [columns]
+  (some #(= "struct" (:type_name %)) columns))
+
 (defn describe-table-fields
   "Returns a set of column metadata for `schema` and `table-name` using `metadata`. "
   [^DatabaseMetaData metadata, database,  driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
   (try
-    (sync-table-with-nested-field database schema table-name)
+    (with-open [rs (.getColumns metadata db-name-or-nil schema table-name nil)]
+      (let [columns (jdbc/metadata-result rs)]
+        (if (table-has-nested-fields columns)
+          (sync-table-with-nested-field database schema table-name)
+          (sync-table-without-nested-field driver columns))))
     (catch Throwable e
       (log/error e (trs "Error retreiving fields for DB {0}.{1}" schema table-name))
       (throw e))))
