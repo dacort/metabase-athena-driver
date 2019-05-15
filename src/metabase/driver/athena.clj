@@ -34,7 +34,7 @@
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
 
-(defmethod driver/supports? [:athena :foreign-keys] [_ _] false)
+(defmethod driver/supports? [:athena :foreign-keys] [_ _] true)
 
 (defmethod driver/supports? [:athena :nested-fields] [_ _] true)
 
