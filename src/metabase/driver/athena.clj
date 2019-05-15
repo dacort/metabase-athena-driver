@@ -5,6 +5,8 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
+            [metabase.query-processor]
+            [metabase.driver.query-processor :as qp]
             [honeysql
              [core :as hsql]
              [format :as hformat]]
@@ -33,6 +35,8 @@
 
 
 (defmethod driver/supports? [:athena :foreign-keys] [_ _] false)
+
+(defmethod driver/supports? [:athena :nested-fields] [_ _] true)
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                     metabase.driver.sql-jdbc method impls                                      |
@@ -242,6 +246,9 @@
     (seq (:params query))
     (merge {:native {:params nil
                      :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
+
+(defmethod driver/mbql->native :athena [driver query]
+  (qp/mbql->native driver query))
 
 (defmethod driver/execute-query :athena [driver query]
   (sql-jdbc.execute/execute-query driver (prepare-query driver, query)))
