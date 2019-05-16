@@ -6,6 +6,8 @@
             [clojure.tools.logging :as log]
             [clojure.set :as set]
             [metabase.query-processor]
+            [metabase.models
+             [field :as field :refer [Field]]]
             [metabase.driver.query-processor :as qp]
             [honeysql
              [core :as hsql]
@@ -124,6 +126,8 @@
 (defmethod sql.qp/date [:athena :week-of-year]    [_ _ expr] (hsql/call :week_of_year expr))
 (defmethod sql.qp/date [:athena :month-of-year]   [_ _ expr] (hsql/call :month expr))
 (defmethod sql.qp/date [:athena :quarter-of-year] [_ _ expr] (hsql/call :quarter expr))
+
+(defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
@@ -246,9 +250,6 @@
     (seq (:params query))
     (merge {:native {:params nil
                      :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
-
-(defmethod driver/mbql->native :athena [driver query]
-  (qp/mbql->native driver query))
 
 (defmethod driver/execute-query :athena [driver query]
   (sql-jdbc.execute/execute-query driver (prepare-query driver, query)))
