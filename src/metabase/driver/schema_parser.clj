@@ -37,16 +37,9 @@
                   :else root)))
             schema)))
 
-(defn- remove-root-field [root-field schema]
-  (let [root-field-kw (keyword root-field)]
-    (cond
-      (sequential? schema) schema
-      (contains? schema root-field-kw) (schema root-field-kw)
-      :else schema)))
-
 (defn- parse-struct-type-field [field-info]
   (let [root-field-name (:name field-info)
-        schema (remove-root-field root-field-name (hsp/hive-schema->map (:type field-info)))]
+        schema (hsp/hive-schema->map (:type field-info))]
     {:name root-field-name
      :base-type :type/Dictionary
      :database-type "struct"
