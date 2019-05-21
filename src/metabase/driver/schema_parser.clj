@@ -1,27 +1,10 @@
 (ns metabase.driver.schema-parser
-  (:require [metabase.driver.hive-parser :as hsp]))
+  (:require [metabase.driver.hive-parser :as hsp]
+            [metabase.driver.sql-jdbc.sync :as sql-jdbc.sync]))
 
 
 (defn- column->base-type [column-type]
-  ({:array      :type/Array
-    :bigint     :type/BigInteger
-    :binary     :type/*
-    :varbinary  :type/*
-    :boolean    :type/Boolean
-    :char       :type/Text
-    :date       :type/Date
-    :decimal    :type/Decimal
-    :double     :type/Float
-    :float      :type/Float
-    :integer    :type/Integer
-    :int        :type/Integer
-    :map        :type/*
-    :smallint   :type/Integer
-    :string     :type/Text
-    :struct     :type/Dictionary
-    :timestamp  :type/DateTime
-    :tinyint    :type/Integer
-    :varchar    :type/Text} (keyword (re-find #"\w+" column-type))))
+  (sql-jdbc.sync/database-type->base-type :athena (keyword (re-find #"\w+" column-type))))
 
 (defn- create-nested-fields [schema]
   (set (map (fn [[k v]]
