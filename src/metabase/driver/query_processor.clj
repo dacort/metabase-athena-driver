@@ -6,27 +6,23 @@
              [honeysql-extensions :as hx]]
             [metabase.driver.sql.query-processor :as sql.qp]))
 
-(defn handle-parent-identifier [field-identifier]
-  (->
-    field-identifier
-    (name)
-    (str/split #"\.")))
+(defn get-parent-qualifiers [field-identifier]
+  (:components field-identifier))
 
 (defn format-field-identifier[field-identifier]
-  (->>
-    field-identifier
-    (apply hx/qualify-and-escape-dots )
-    (keyword)))
+  (apply hx/identifier :field field-identifier))
 
-(defn get-field-identifier [field]
-  (let [table            (qp.store/table (:table_id field))
-        parent-id        (:parent_id field)]
-    (if (nil? parent-id)
-      [(:schema table) (:name table) (:name field)]
-      (conj (handle-parent-identifier (sql.qp/->honeysql :athena [:field-id parent-id])) (:name field)))))
+(defn get-field-full-name [qualifiers field-name parent-id]
+  (if (nil? parent-id)
+    (concat qualifiers [field-name])
+    (concat (get-parent-qualifiers (sql.qp/->honeysql :athena [:field-id parent-id])) [field-name])))
 
-(defn ->honeysql [driver field]
-  (->>
-    (get-field-identifier field)
-    (format-field-identifier)
-    (sql.qp/cast-unix-timestamp-field-if-needed driver field)))
+(defn ->honeysql [driver {field-name :name, table-id :table_id, parent-id :parent_id :as field}]
+  (let [qualifiers (if sql.qp/*table-alias*
+                     [sql.qp/*table-alias*]
+                     (let [{schema :schema, table-name :name} (qp.store/table table-id)]
+                       [schema table-name]))]
+    (->>
+      (get-field-full-name qualifiers field-name parent-id)
+      (format-field-identifier)
+      (sql.qp/cast-unix-timestamp-field-if-needed driver field))))
