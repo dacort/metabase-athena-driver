@@ -1,9 +1,14 @@
 (ns metabase.driver.athena
   (:refer-clojure :exclude [second])
-  (:require [clojure.java.jdbc :as jdbc]
+  (:require [metabase.driver.schema-parser :as schema-parser]
+            [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
+            [metabase.query-processor]
+            [metabase.models
+             [field :as field :refer [Field]]]
+            [metabase.driver.query-processor :as qp]
             [honeysql
              [core :as hsql]
              [format :as hformat]]
@@ -18,7 +23,9 @@
             [metabase.util
              [date :as du]
              [honeysql-extensions :as hx]
-             [i18n :refer [trs]]])
+             [i18n :refer [trs]]]
+            [metabase.util :as u]
+            [clojure.string :as string])
   (:import [java.sql DatabaseMetaData Timestamp] java.util.Date java.sql.Time))
 
 (driver/register! :athena, :parent :sql-jdbc)
@@ -29,7 +36,9 @@
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
 
-(defmethod driver/supports? [:athena :foreign-keys] [_ _] false)
+(defmethod driver/supports? [:athena :foreign-keys] [_ _] true)
+
+(defmethod driver/supports? [:athena :nested-fields] [_ _] true)
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                     metabase.driver.sql-jdbc method impls                                      |
@@ -69,7 +78,7 @@
     :map        :type/*
     :smallint   :type/Integer
     :string     :type/Text
-    :struct     :type/*
+    :struct     :type/Dictionary
     :timestamp  :type/DateTime
     :tinyint    :type/Integer
     :varchar    :type/Text} database-type))
@@ -118,6 +127,8 @@
 (defmethod sql.qp/date [:athena :month-of-year]   [_ _ expr] (hsql/call :month expr))
 (defmethod sql.qp/date [:athena :quarter-of-year] [_ _ expr] (hsql/call :quarter expr))
 
+(defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
+
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
   "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
@@ -127,23 +138,65 @@
                             database-type))
           :type/*)))
 
+(defn- run-query
+  "Workaround for avoiding the usage of 'advance' jdbc feature that are not implemented by the driver yet.
+   Such as prepare statement"
+  [database query]
+  (log/infof "Running Athena query : '%s'..." query)
+  (try
+    (jdbc/query (sql-jdbc.conn/db->pooled-connection-spec database) (string/replace query ";" " ") {:raw? true})
+    (catch Exception e
+      (log/error (u/format-color 'red "Failed to execute query: %s %s" query (.getMessage e))))))
+
+(defn- describe-database->clj
+  "Workaround for wrong getColumnCount response by the driver"
+  [rs]
+  {:name (string/trim (:col_name rs))
+   :type (string/trim (:data_type rs))})
+
+(defn remove-invalid-columns
+  [result]
+  (->> result
+       (remove #(= (:col_name %) ""))
+       (remove #(= (:col_name %) nil))
+       (remove #(= (:data_type %) nil))
+       (remove #(string/starts-with? (:col_name %) "#")) ; remove comment
+       (distinct) ; driver can return twice the partitioning fields
+       (map describe-database->clj)))
+
+(defn sync-table-with-nested-field [database schema table-name]
+  (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
+       (remove-invalid-columns)
+       (map schema-parser/parse-schema)
+       (doall)
+       (set)))
+
+(defn sync-table-without-nested-field [driver columns]
+  (set
+    (for [{database-type :type_name
+           column-name   :column_name
+           remarks       :remarks} columns]
+      (merge
+        {:name          column-name
+         :database-type database-type
+         :base-type     (database-type->base-type-or-warn driver database-type)}
+        (when (not (str/blank? remarks))
+          {:field-comment remarks})))))
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
+
+(defn table-has-nested-fields [columns]
+  (some #(= "struct" (:type_name %)) columns))
+
 (defn describe-table-fields
   "Returns a set of column metadata for `schema` and `table-name` using `metadata`. "
-  [^DatabaseMetaData metadata, driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
+  [^DatabaseMetaData metadata, database,  driver, {^String schema :schema, ^String table-name :name}, & [^String db-name-or-nil]]
   (try
     (with-open [rs (.getColumns metadata db-name-or-nil schema table-name nil)]
-      (set
-       (for [{database-type :type_name
-              column-name   :column_name
-              remarks       :remarks} (jdbc/metadata-result rs)]
-         (merge
-          {:name          column-name
-           :database-type database-type
-           :base-type     (database-type->base-type-or-warn driver database-type)}
-          (when (not (str/blank? remarks))
-            {:field-comment remarks})))))
+      (let [columns (jdbc/metadata-result rs)]
+        (if (table-has-nested-fields columns)
+          (sync-table-with-nested-field database schema table-name)
+          (sync-table-without-nested-field driver columns))))
     (catch Throwable e
       (log/error e (trs "Error retreiving fields for DB {0}.{1}" schema table-name))
       (throw e))))
@@ -156,7 +209,7 @@
   (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
     (->> (assoc (select-keys table [:name :schema])
                 :fields (try
-                          (describe-table-fields metadata driver table)
+                          (describe-table-fields metadata database driver table)
                           (catch Throwable e (set nil)))))))
 
 
