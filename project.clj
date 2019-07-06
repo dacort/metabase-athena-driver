@@ -1,4 +1,4 @@
-(defproject metabase/athena-driver "0.0.3-athena-jdbc-2.0.7"
+(defproject metabase/athena-driver "0.0.4-athena-jdbc-2.0.7"
   :min-lein-version "2.5.0"
 
   :dependencies
