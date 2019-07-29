@@ -61,5 +61,5 @@ Note that the initial sync can take some time depending on how many databases an
   - ~~Parameterized queries are not supported~~
 - Sometimes, the initial database verification can time out
   - If this happens, configure a higher timeout value with the `MB_DB_CONNECTION_TIMEOUT_MS` environment variable
-- Heavily nested fields can result in a `StackOverflowError`
-  - If this happens, increase the `-Xss` JVM parameter
+- ~~Heavily nested fields can result in a `StackOverflowError`~~
+  - ~~If this happens, increase the `-Xss` JVM parameter~~
