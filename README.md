@@ -52,6 +52,14 @@ You'll need to provide the AWS region, an access key and secret key, and an S3 b
 
 Note that the initial sync can take some time depending on how many databases and tables you have.
 
+## Testing
+
+Only one test exists at the moment, but can easily be run:
+
+```shell
+lein test
+```
+
 ## Known Issues
 
 - Cannot specify a single database to sync
