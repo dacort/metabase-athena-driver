@@ -56,6 +56,8 @@
     :s3_staging_dir  s3_staging_dir
     ; :LogLevel    6
     }
+   (when (str/blank? access_key)
+     {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
    (dissoc details :db)))
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
