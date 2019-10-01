@@ -1,7 +1,7 @@
 # Complete list of options here: https://github.com/metabase/metabase/wiki/Metabase-Plugin-Manifest-Reference
 info:
   name: Metabase Athena Driver
-  version: 0.1.0-athena-jdbc-2.0.7
+  version: 0.1.1-athena-jdbc-2.0.7
   description: Allows Metabase to connect to AWS Athena databases. Community Supported driver.
 driver:
   name: athena
