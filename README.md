@@ -25,7 +25,7 @@ I'm not familiar enough with `lein` to know if there is a better way to include 
 
 ## Running
 
-With Metabase 0.32, drivers must be stored in a `plugins` directory in the same directory where `metabase.jar` is, or you can specify the directory by setting the env var `MB_PLUGINS_DIR`.
+Beginning with Metabase 0.32, drivers must be stored in a `plugins` directory in the same directory where `metabase.jar` is, or you can specify the directory by setting the env var `MB_PLUGINS_DIR`.
 
 Let's assume we download `metabase.jar` to `~/metabae/` and we built the project above. From the source directory:
 
@@ -50,7 +50,10 @@ Once you've started up Metabase, go to add a database and select "Athena".
 
 You'll need to provide the AWS region, an access key and secret key, and an S3 bucket and prefix where query results will be written to.
 
-Note that the initial sync can take some time depending on how many databases and tables you have.
+Please note:
+- The provided bucket must be in the same region you specify.
+- If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html).
+- The initial sync can take some time depending on how many databases and tables you have.
 
 ## Testing
 
