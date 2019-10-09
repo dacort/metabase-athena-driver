@@ -46,7 +46,7 @@
 
 ;;; ---------------------------------------------- sql-jdbc.connection -----------------------------------------------
 
-(defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir db], :as details}]
+(defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db], :as details}]
   (merge
    {:classname   "com.simba.athena.jdbc.Driver"
     :subprotocol "awsathena"
@@ -54,6 +54,7 @@
     :user        access_key
     :password    secret_key
     :s3_staging_dir  s3_staging_dir
+    :workgroup workgroup
     ; :LogLevel    6
     }
    (when (str/blank? access_key)

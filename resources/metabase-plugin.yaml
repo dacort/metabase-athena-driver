@@ -1,7 +1,7 @@
 # Complete list of options here: https://github.com/metabase/metabase/wiki/Metabase-Plugin-Manifest-Reference
 info:
   name: Metabase Athena Driver
-  version: 0.1.0-athena-jdbc-2.0.7
+  version: 0.1.1-athena-jdbc-2.0.7
   description: Allows Metabase to connect to AWS Athena databases. Community Supported driver.
 driver:
   name: athena
@@ -12,6 +12,9 @@ driver:
     - name: region
       display-name: Region
       default: "us-east-1"
+    - name: workgroup
+      display-name: Workgroup
+      default: "primary"
     - name: s3_staging_dir
       display-name: S3 Staging dir
       default: s3://your_bucket
