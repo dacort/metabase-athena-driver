@@ -135,7 +135,7 @@
 
 (defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
 
-(defmethod sql.qp/current-datetime-fn :athena [_] (System/currentTimeMillis))
+(defmethod sql.qp/current-datetime-fn :athena [_] (du/->Timestamp (System/currentTimeMillis)))
 
 (defmethod driver/date-add :athena [driver dt amount unit] (du/relative-date unit amount dt))
 
