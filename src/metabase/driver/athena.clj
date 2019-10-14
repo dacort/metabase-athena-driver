@@ -26,7 +26,10 @@
              [i18n :refer [trs]]]
             [metabase.util :as u]
             [clojure.string :as string])
-  (:import [java.sql DatabaseMetaData Timestamp] java.util.Date java.sql.Time))
+  (:import [java.sql DatabaseMetaData Timestamp]
+           java.util.Date
+           java.sql.Time
+           (org.quartz Calendar)))
 
 (driver/register! :athena, :parent :sql-jdbc)
 
@@ -132,6 +135,10 @@
 
 (defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
 
+(defmethod sql.qp/current-datetime-fn :athena [_] (System/currentTimeMillis))
+
+(defmethod driver/date-add :athena [driver dt amount unit] (du/relative-date unit amount dt))
+
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
   "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
@@ -210,7 +217,7 @@
 
 (defmethod driver/describe-table :athena [driver database table]
   (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
-    (->> (assoc (select-keys table [:name :schema])
+                         (->> (assoc (select-keys table [:name :schema])
                 :fields (try
                           (describe-table-fields metadata database driver table)
                           (catch Throwable e (set nil)))))))
@@ -245,13 +252,13 @@
 ; If we want to limit the initial connection to a specific database/schema, I think we'd have to do that here...
 (defmethod driver/describe-database :athena [driver database]
   {:tables (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
-             (fast-active-tables driver metadata))})
+                                  (fast-active-tables driver metadata))})
 
 ; Unsure if this is the right way to approach building the parameterized query...but it works
 (defn- prepare-query [driver {:keys [database settings], query :native, :as outer-query}]
   (cond-> outer-query
-    (seq (:params query))
-    (merge {:native {:params nil
+          (seq (:params query))
+          (merge {:native {:params nil
                      :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
 
 (defmethod driver/execute-query :athena [driver query]
