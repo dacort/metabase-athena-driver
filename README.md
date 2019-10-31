@@ -69,7 +69,7 @@ Please note:
 - If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html).
 - The initial sync can take some time depending on how many databases and tables you have.
 
-### IAM Policy
+### Example IAM Policy
 
 ```
 {
