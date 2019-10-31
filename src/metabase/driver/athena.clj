@@ -137,6 +137,8 @@
 
 (defmethod sql.qp/current-datetime-fn :athena [_] (du/->Timestamp (System/currentTimeMillis)))
 
+(defmethod sql.qp/unix-timestamp->timestamp [:athena :seconds] [_ _ expr] (hsql/call :from_unixtime expr))
+
 (defmethod driver/date-add :athena [driver dt amount unit] (du/relative-date unit amount dt))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
