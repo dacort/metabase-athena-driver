@@ -31,6 +31,12 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
+      - run:
+          name: Download Athena driver
+          command: |
+            mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.7/
+            wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar
+
       - run: lein deps
 
       - save_cache:
