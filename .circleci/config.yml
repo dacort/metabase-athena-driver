@@ -18,7 +18,8 @@ jobs:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
     steps:
-      - checkout
+      - checkout:
+          path: metabase-athena-driver
       - run:
           name: Checkout Metabase source
           command: git clone --depth=1 -b $BRANCH https://github.com/metabase/metabase.git metabase
@@ -36,11 +37,14 @@ jobs:
           command: |
             mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.7/
             wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar
-      - run: lein deps
+      - run:
+          working_directory: metabase-athena-driver
+          command: lein deps
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-dependencies-{{ checksum "project.clj" }}
+          key: metabase-athena-driver-{{ checksum "metabase-athena-driver/project.clj" }}
+      - run: pwd && ls -alF
       - persist_to_workspace:
           root: /home/circleci/
           paths:
@@ -54,6 +58,7 @@ jobs:
       - attach_workspace:
           at: /home/circleci/
       # run tests!
+      - run: pwd && ls -alF
       - run:
           name: Athena unit tests
           working_directory: metabase-athena-driver
