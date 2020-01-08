@@ -80,3 +80,6 @@ workflows:
       - test:
           requires:
             - checkout
+      - test-metabase-driver:
+          requires:
+            - checkout
