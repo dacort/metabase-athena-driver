@@ -28,10 +28,7 @@ jobs:
           command: ln -sfv ../../../metabase-athena-driver metabase/modules/drivers/athena
       # Download and cache dependencies
       - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "project.clj" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+          key: metabase-athena-driver-{{ checksum "metabase-athena-driver/project.clj" }}
       - run:
           name: Download Athena driver
           command: |
@@ -44,7 +41,6 @@ jobs:
           paths:
             - ~/.m2
           key: metabase-athena-driver-{{ checksum "metabase-athena-driver/project.clj" }}
-      - run: pwd && ls -alF
       - persist_to_workspace:
           root: /home/circleci/
           paths:
@@ -58,11 +54,23 @@ jobs:
       - attach_workspace:
           at: /home/circleci/
       # run tests!
-      - run: pwd && ls -alF
       - run:
           name: Athena unit tests
           working_directory: metabase-athena-driver
           command: lein test
+  
+  test-metabase-driver:
+    docker:
+      - image: circleci/clojure:lein-2.7.1
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Metabase driver integration tests
+          working_directory: metabase
+          environment:
+            DRIVERS: h2,athena
+          command: lein with-profile +ci test
 
 workflows:
   version: 2
