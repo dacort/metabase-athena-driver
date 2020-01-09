@@ -21,4 +21,7 @@
     :omit-source   true
     :javac-options ["-target" "1.8", "-source" "1.8"]
     :target-path   "target/%s"
-    :uberjar-name  "athena.metabase-driver.jar"}})
+    :uberjar-name  "athena.metabase-driver.jar"}
+
+   :unit_tests
+   {:test-paths     ^:replace ["test_unit"]}})

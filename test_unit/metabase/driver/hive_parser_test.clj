@@ -1,4 +1,4 @@
-(ns driver.hive-parser-test
+(ns metabase.driver.hive-parser-test
   (:require [clojure.test :refer :all]
             [metabase.driver.hive-parser :refer [hive-schema->map]]))
 
