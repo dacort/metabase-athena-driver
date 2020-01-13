@@ -51,7 +51,6 @@
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
 (defmethod tx/dbdef->connection-details :athena [_ context {:keys [database-name]}]
-            (println "Damon Region: " (tx/db-test-env-var-or-throw :athena :region))
            (merge
              {:region   (tx/db-test-env-var-or-throw :athena :region)
               :access_key      (tx/db-test-env-var-or-throw :athena :access-key)
@@ -68,7 +67,7 @@
 ;; If other tables exist, the tests start to query them for some reason,
 ;; so we exclude them via an environment variable
 (defmethod sql-jdbc.sync/excluded-schemas :athena [_]
-  (println "Excluding schemas: " (tx/db-test-env-var-or-throw :athena :ignore-dbs "") #",")
+  (println "Excluding schemas: " (tx/db-test-env-var-or-throw :athena :ignore-dbs ""))
   (str/split (tx/db-test-env-var-or-throw :athena :ignore-dbs "") #","))
 
 ;; Athena requires you identify an object with db-name.table-name
@@ -142,3 +141,11 @@
 ;; Add IDs to the sample data
 (defmethod load-data/load-data! :athena [& args]
   (apply load-data/load-data-add-ids! args))
+
+;; For the time being, we want to be able to run some isolate Metabase tests without loading the entire test dataset.
+;; So for now, we'll override the create-db! method to allow us to explicitly skip loading test data.
+(defmethod tx/create-db! :athena [driver {:keys [database-name] :as db-def} & options]
+  (when (= "no" (tx/db-test-env-var :athena :skip-create "no"))
+    (println "Attempting to create the default databases")
+    ;; call the default impl for SQL JDBC drivers
+    (apply (get-method tx/create-db! :sql-jdbc/test-extensions) driver db-def options)))

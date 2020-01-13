@@ -74,7 +74,7 @@ jobs:
           working_directory: metabase
           environment:
             DRIVERS: athena
-          command: lein with-profile +ci test
+          command: lein with-profile +ci test metabase.driver.athena-test
 
 workflows:
   version: 2
