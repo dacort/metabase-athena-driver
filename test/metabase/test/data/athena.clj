@@ -53,8 +53,8 @@
 (defmethod tx/dbdef->connection-details :athena [_ context {:keys [database-name]}]
            (merge
              {:region   (tx/db-test-env-var-or-throw :athena :region)
-              :user      (tx/db-test-env-var-or-throw :athena :access-key)
-              :password  (tx/db-test-env-var-or-throw :athena :secret-key)
+              :access_key      (tx/db-test-env-var-or-throw :athena :access-key)
+              :secret_key  (tx/db-test-env-var-or-throw :athena :secret-key)
               :s3_staging_dir (tx/db-test-env-var-or-throw :athena :s3-staging-dir)
               :workgroup "primary"}))
 
