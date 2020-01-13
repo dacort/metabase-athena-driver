@@ -51,6 +51,7 @@
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
 (defmethod tx/dbdef->connection-details :athena [_ context {:keys [database-name]}]
+            (println "Damon Region: " (tx/db-test-env-var-or-throw :athena :region))
            (merge
              {:region   (tx/db-test-env-var-or-throw :athena :region)
               :access_key      (tx/db-test-env-var-or-throw :athena :access-key)
