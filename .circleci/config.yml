@@ -79,7 +79,7 @@ jobs:
             MB_ATHENA_TEST_SECRET_KEY: $MB_ATHENA_TEST_SECRET_KEY
             MB_ATHENA_TEST_S3_STAGING_DIR: $MB_ATHENA_TEST_S3_STAGING_DIR
             MB_ATHENA_TEST_IGNORE_DBS: $MB_ATHENA_TEST_IGNORE_DBS
-          command: lein with-profile +ci test
+          command: echo $MB_ATHENA_TEST_REGION && lein with-profile +ci test
 
 workflows:
   version: 2
