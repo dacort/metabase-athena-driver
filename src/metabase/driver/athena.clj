@@ -1,6 +1,6 @@
 (ns metabase.driver.athena
-  (:refer-clojure :exclude [second])
-  (:require [metabase.driver.schema-parser :as schema-parser]
+    (:refer-clojure :exclude [second])
+    (:require [metabase.driver.schema-parser :as schema-parser]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -10,28 +10,27 @@
              [field :as field :refer [Field]]]
             [metabase.driver.query-processor :as qp]
             [honeysql
-             [core :as hsql]
-             [format :as hformat]]
+             [core :as hsql]]
+            [java-time :as t]
             [metabase.driver :as driver]
             [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [connection :as sql-jdbc.conn]
              [execute :as sql-jdbc.execute]
              [sync :as sql-jdbc.sync]]
+            [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.util
-             [date :as du]
+             [date-2 :as u.date]
              [honeysql-extensions :as hx]
              [i18n :refer [trs]]]
             [metabase.util :as u]
             [clojure.string :as string])
-  (:import [java.sql DatabaseMetaData Timestamp]
-           java.util.Date
-           java.sql.Time
-           (org.quartz Calendar)))
+    (:import [java.sql DatabaseMetaData Timestamp]
+             (java.time OffsetDateTime ZonedDateTime)))
 
-(driver/register! :athena, :parent :sql-jdbc)
+(driver/register! :athena, :parent #{:sql-jdbc, ::legacy/use-legacy-classes-for-read-and-set})
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -90,10 +89,14 @@
     :varchar    :type/Text} database-type))
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
-(defmethod unprepare/unprepare-value [:athena Date] [_ value]
-  (unprepare/unprepare-date-with-iso-8601-fn :from_iso8601_timestamp value))
 
-(prefer-method unprepare/unprepare-value [:sql Time] [:athena Date])
+(defmethod unprepare/unprepare-value [:athena OffsetDateTime]
+  [_ t]
+  (format "timestamp '%s %s %s'" (t/local-date t) (t/local-time t) (t/zone-offset t)))
+
+(defmethod unprepare/unprepare-value [:athena ZonedDateTime]
+  [_ t]
+  (format "timestamp '%s %s %s'" (t/local-date t) (t/local-time t) (t/zone-id t)))
 
 ; Helper function for truncating dates - currently unused
 (defn- date-trunc [unit expr] (hsql/call :date_trunc (hx/literal unit) expr))
@@ -135,11 +138,13 @@
 
 (defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
 
-(defmethod sql.qp/current-datetime-fn :athena [_] (du/->Timestamp (System/currentTimeMillis)))
-
 (defmethod sql.qp/unix-timestamp->timestamp [:athena :seconds] [_ _ expr] (hsql/call :from_unixtime expr))
 
-(defmethod driver/date-add :athena [driver dt amount unit] (du/relative-date unit amount dt))
+(defmethod driver/date-add :athena [_ dt amount unit]
+  (hsql/call :date_add
+             (hx/literal (name unit))
+             (hsql/raw (int amount))
+             (hx/->timestamp dt)))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn

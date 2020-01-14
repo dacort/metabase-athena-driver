@@ -22,7 +22,7 @@
              [load-data :as load-data]]
             [metabase.test.data.sql.ddl :as ddl]
             [metabase.util
-             [date :as du]
+             [date-2 :as u.date]
              [honeysql-extensions :as hx]])
   (:import java.util.Date
            java.sql.Time))
@@ -31,22 +31,6 @@
 
 ;; during unit tests don't treat athena as having FK support
 (defmethod driver/supports? [:athena :foreign-keys] [_ _] (not config/is-test?))
-
-;; Override unprepare for date types as Athena doesn't support inserting "timestamp with time zone" values,
-;; which is what the from_iso8601_timestamp() function returns.
-(defmethod unprepare/unprepare-value [:athena Date] [_ value]
-  (format "from_unixtime(to_unixtime(%s))"
-          (hformat/to-sql
-            (hsql/call :from_iso8601_timestamp (hx/literal (du/date->iso-8601 value))))
-          ))
-
-;; Override unprepare for Time types as this was causing errors in INSERTs - we may need to fix this in the main driver
-;; TODO: Fix the from/to_unixtime shenanigans - they were used while testing how to implement this
-(defmethod unprepare/unprepare-value [:athena Time] [_ value]
-  (format "from_unixtime(to_unixtime(%s))"
-          (hformat/to-sql
-            (hsql/call :from_iso8601_timestamp (hx/literal (du/date->iso-8601 value))))
-          ))
 
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
