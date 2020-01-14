@@ -70,9 +70,30 @@ Please note:
 - If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html).
 - The initial sync can take some time depending on how many databases and tables you have.
 
+If you need an example IAM policy for providing read-only access to your customer-base, check out the [Example IAM Policy](#example-iam-policy) below.
+
+## Testing
+
+There are two different sets of tests in the project.
+
+1. Unit tests, located in the `test_unit/` directory
+2. Integration tests, located in the standard `test/` directory
+
+The reason they're split out is because the integration tests require us to [link the driver](https://github.com/metabase/metabase/wiki/Writing-a-Driver:-Adding-Test-Extensions,-Tests,-and-Setting-up-CI#file-organization) into the core Metabase code and run the full suite of tests there. I wanted to be able to have some lightweight unit tests that could be run without that overhead, so those are split out into the `test_unit/` directory.
+
+To run the basic unit tests, just run:
+
+```shell
+lein test
+```
+
+## Resources
+
 ### Example IAM Policy
 
-```
+This policy provides read-only access. Note you need to specify any buckets you want the user to be able to query from _as well as_ the S3 bucket provided as part of the configuration where results are written to.
+
+```json
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -153,19 +174,34 @@ Please note:
     ]
 }
 ```
-## Testing
 
-There are two different sets of tests in the project.
+If your customer-base needs access to create tables for whatever reason, they will need additional AWS Glue permissions. Here is an example policy granting that. Note that the Resource is `*` so this will give Delete/Update permissions to any table.
 
-1. Unit tests, located in the `test_unit/` directory
-2. Integration tests, located in the standard `test/` directory
-
-The reason they're split out is because the integration tests require us to [link the driver](https://github.com/metabase/metabase/wiki/Writing-a-Driver:-Adding-Test-Extensions,-Tests,-and-Setting-up-CI#file-organization) into the core Metabase code and run the full suite of tests there. I wanted to be able to have some lightweight unit tests that could be run without that overhead, so those are split out into the `test_unit/` directory.
-
-To run the basic unit tests, just run:
-
-```shell
-lein test
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "glue:BatchCreatePartition",
+                "glue:UpdateDatabase",
+                "glue:DeleteDatabase",
+                "glue:CreateTable",
+                "glue:CreateDatabase",
+                "glue:UpdateTable",
+                "glue:BatchDeletePartition",
+                "glue:BatchDeleteTable",
+                "glue:DeleteTable",
+                "glue:CreatePartition",
+                "glue:DeletePartition",
+                "glue:UpdatePartition"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
 ```
 
 ## Known Issues
