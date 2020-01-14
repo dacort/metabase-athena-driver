@@ -29,7 +29,7 @@ I'm not familiar enough with `lein` to know if there is a better way to include 
 2. Download the Athena driver into your local Maven repo
    ```shell
    mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.7/
-   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar 
+   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar
    ```
 
 3. Clone this repo
@@ -70,6 +70,89 @@ Please note:
 - If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html).
 - The initial sync can take some time depending on how many databases and tables you have.
 
+### Example IAM Policy
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Athena",
+            "Effect": "Allow",
+            "Action": [
+                "athena:BatchGetNamedQuery",
+                "athena:BatchGetQueryExecution",
+                "athena:GetCatalogs",
+                "athena:GetExecutionEngine",
+                "athena:GetExecutionEngines",
+                "athena:GetNamedQuery",
+                "athena:GetNamespace",
+                "athena:GetNamespaces",
+                "athena:GetQueryExecution",
+                "athena:GetQueryExecutions",
+                "athena:GetQueryResults",
+                "athena:GetQueryResultsStream",
+                "athena:GetTable",
+                "athena:GetTables",
+                "athena:GetWorkGroup",
+                "athena:ListNamedQueries",
+                "athena:ListQueryExecutions",
+                "athena:ListTagsForResource",
+                "athena:ListWorkGroups",
+                "athena:StartQueryExecution",
+                "athena:StopQueryExecution"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "Glue",
+            "Effect": "Allow",
+            "Action": [
+                "glue:BatchGetPartition",
+                "glue:GetDatabase",
+                "glue:GetDatabases",
+                "glue:GetPartition",
+                "glue:GetPartitions",
+                "glue:GetTable",
+                "glue:GetTables",
+                "glue:GetTableVersion",
+                "glue:GetTableVersions"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3ReadAccess",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::bucket1",
+                "arn:aws:s3:::bucket1/*",
+                "arn:aws:s3:::bucket2",
+                "arn:aws:s3:::bucket2/*"
+            ]
+        },
+        {
+            "Sid": "AthenaResultsBucket",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:AbortMultipartUpload",
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": [
+                "arn:aws:s3:::bucket2",
+                "arn:aws:s3:::bucket2/*"
+            ]
+        }
+    ]
+}
+```
 ## Testing
 
 There are two different sets of tests in the project.
