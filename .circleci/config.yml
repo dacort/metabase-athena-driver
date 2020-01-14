@@ -18,7 +18,8 @@ jobs:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
     steps:
-      - checkout
+      - checkout:
+          path: metabase-athena-driver
       - run:
           name: Checkout Metabase source
           command: git clone --depth=1 -b $BRANCH https://github.com/metabase/metabase.git metabase
@@ -27,20 +28,23 @@ jobs:
           command: ln -sfv ../../../metabase-athena-driver metabase/modules/drivers/athena
       # Download and cache dependencies
       - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "project.clj" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+          key: metabase-athena-driver-{{ checksum "metabase-athena-driver/project.clj" }}
       - run:
           name: Download Athena driver
           command: |
             mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.7/
             wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar
-      - run: lein deps
+      - run:
+          name: Build and install Metabase driver components
+          working_directory: metabase
+          command: lein install-for-building-drivers
+      - run:
+          working_directory: metabase-athena-driver
+          command: lein deps
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-dependencies-{{ checksum "project.clj" }}
+          key: metabase-athena-driver-{{ checksum "metabase-athena-driver/project.clj" }}
       - persist_to_workspace:
           root: /home/circleci/
           paths:
@@ -57,7 +61,20 @@ jobs:
       - run:
           name: Athena unit tests
           working_directory: metabase-athena-driver
-          command: lein test
+          command: lein with-profile +unit_tests test
+  
+  test-metabase-driver:
+    docker:
+      - image: circleci/clojure:lein-2.7.1
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Metabase driver integration tests
+          working_directory: metabase
+          environment:
+            DRIVERS: athena
+          command: lein with-profile +ci test metabase.driver.athena-test
 
 workflows:
   version: 2
@@ -65,5 +82,8 @@ workflows:
     jobs:
       - checkout
       - test:
+          requires:
+            - checkout
+      - test-metabase-driver:
           requires:
             - checkout

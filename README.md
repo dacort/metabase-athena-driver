@@ -2,6 +2,7 @@
 
 💥*Note:* This project is under active development
 
+![CircleCI](https://img.shields.io/circleci/build/github/dacort/metabase-athena-driver)
 [![Latest Release](https://img.shields.io/github/v/release/dacort/metabase-athena-driver.svg?label=latest%20release&include_prereleases)](https://github.com/dacort/metabase-athena-driver/releases)
 [![GitHub license](https://img.shields.io/github/license/dacort/metabase-athena-driver)](https://raw.githubusercontent.com/dacort/metabase-athena-driver/master/LICENSE)
 
@@ -71,7 +72,14 @@ Please note:
 
 ## Testing
 
-Only one test exists at the moment, but can easily be run:
+There are two different sets of tests in the project.
+
+1. Unit tests, located in the `test_unit/` directory
+2. Integration tests, located in the standard `test/` directory
+
+The reason they're split out is because the integration tests require us to [link the driver](https://github.com/metabase/metabase/wiki/Writing-a-Driver:-Adding-Test-Extensions,-Tests,-and-Setting-up-CI#file-organization) into the core Metabase code and run the full suite of tests there. I wanted to be able to have some lightweight unit tests that could be run without that overhead, so those are split out into the `test_unit/` directory.
+
+To run the basic unit tests, just run:
 
 ```shell
 lein test
