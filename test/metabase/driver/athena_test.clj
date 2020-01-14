@@ -74,7 +74,6 @@
                                                                  :base_type     :type/DateTime}
                                                                 ]
                                                   :native_form       {:query relative-date-query}
-                                                  :requested_timezone "UTC"
                                                   :results_timezone   "UTC"}}
 
                              (-> (process-native-query relative-date-query)))
@@ -84,7 +83,7 @@
 (datasets/expect-with-driver :athena
                              {:row_count     1
                              :status        :completed
-                             :data          {:rows        [["2006-01-02T00:00:00.000Z" "15:04:05.000" "15:04:05.000 America/Los_Angeles" "2006-01-02T15:04:05.000Z" "2006-01-02 15:04:05.000 America/Los_Angeles" "0-3" "2 00:00:00.000"]]
+                             :data          {:rows        [["2006-01-02T00:00:00Z" "15:04:05.000" "15:04:05.000 America/Los_Angeles" "2006-01-02T15:04:05Z" "2006-01-02 15:04:05.000 America/Los_Angeles" "0-3" "2 00:00:00.000"]]
                                              :cols        [{:name           "type_date"
                                                             :display_name   "type_date"
                                                             :base_type      :type/Date
@@ -121,7 +120,6 @@
                                                             :source         :native
                                                             :field_ref      [:field-literal "type_interval_day_to_second" :type/Text]}]
                                              :native_form {:query datetime-types-query}
-                                             :requested_timezone  "UTC"
                                              :results_timezone    "UTC"}}
                              (-> (process-native-query datetime-types-query)))
 

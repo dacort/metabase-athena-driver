@@ -28,7 +28,7 @@
             [metabase.util :as u]
             [clojure.string :as string])
     (:import [java.sql DatabaseMetaData Timestamp]
-      (org.quartz Calendar) (java.time OffsetDateTime ZonedDateTime)))
+             (java.time OffsetDateTime ZonedDateTime)))
 
 (driver/register! :athena, :parent #{:sql-jdbc, ::legacy/use-legacy-classes-for-read-and-set})
 
@@ -89,11 +89,12 @@
     :varchar    :type/Text} database-type))
 
 ;;; ------------------------------------------------- date functions -------------------------------------------------
-(defmethod unprepare/unprepare-value [:presto OffsetDateTime]
+
+(defmethod unprepare/unprepare-value [:athena OffsetDateTime]
   [_ t]
   (format "timestamp '%s %s %s'" (t/local-date t) (t/local-time t) (t/zone-offset t)))
 
-(defmethod unprepare/unprepare-value [:presto ZonedDateTime]
+(defmethod unprepare/unprepare-value [:athena ZonedDateTime]
   [_ t]
   (format "timestamp '%s %s %s'" (t/local-date t) (t/local-time t) (t/zone-id t)))
 
@@ -137,11 +138,13 @@
 
 (defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
 
-(defmethod sql.qp/current-datetime-fn :athena [_] (u.date/parse (System/currentTimeMillis)))
-
 (defmethod sql.qp/unix-timestamp->timestamp [:athena :seconds] [_ _ expr] (hsql/call :from_unixtime expr))
 
-(defmethod driver/date-add :athena [driver dt amount unit] (u.date/add unit amount dt))
+(defmethod driver/date-add :athena [_ dt amount unit]
+  (hsql/call :date_add
+             (hx/literal (name unit))
+             (hsql/raw (int amount))
+             (hx/->timestamp dt)))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
