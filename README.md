@@ -72,6 +72,13 @@ Please note:
 
 If you need an example IAM policy for providing read-only access to your customer-base, check out the [Example IAM Policy](#example-iam-policy) below.
 
+You can provide additional options if necessary. For example, to disable result set streaming and enable `TRACE`-level debugging, use `UseResultsetStreaming=0;LogLevel=6`.
+
+Result set streaming is a performance optimization that streams results from Athena rather than using pagination logic, however it requries outbound access to TCP port 444 and not all organizations allow that.
+
+Other options can be found in the "Driver Configuration Options" section of the [Athena JDBC Driver Installation and Configuration
+Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
+
 ## Testing
 
 There are two different sets of tests in the project.
