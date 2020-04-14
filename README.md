@@ -28,17 +28,20 @@ I'm not familiar enough with `lein` to know if there is a better way to include 
 1. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
 
 2. Download the Athena driver into your local Maven repo
+
    ```shell
-   mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.7/
-   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar
+   mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.9/
+   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.9/athena-jdbc-2.0.9.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/AthenaJDBC42_2.0.9.jar
    ```
 
 3. Clone this repo
+
    ```shell
    git clone https://github.com/dacort/metabase-athena-driver
    ```
 
 4. Build the jar
+
    ```shell
    cd metabase-athena-driver/
    DEBUG=1 LEIN_SNAPSHOTS_IN_RELEASE=true lein uberjar
@@ -67,6 +70,7 @@ Once you've started up Metabase, go to add a database and select "Athena".
 You'll need to provide the AWS region, an access key and secret key, and an S3 bucket and prefix where query results will be written to.
 
 Please note:
+
 - The provided bucket must be in the same region you specify.
 - If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html).
 - The initial sync can take some time depending on how many databases and tables you have.
@@ -78,7 +82,7 @@ You can provide additional options if necessary. For example, to disable result 
 Result set streaming is a performance optimization that streams results from Athena rather than using pagination logic, however it requries outbound access to TCP port 444 and not all organizations allow that.
 
 Other options can be found in the "Driver Configuration Options" section of the [Athena JDBC Driver Installation and Configuration
-Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
+Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
 
 ## Testing
 
@@ -103,83 +107,76 @@ This policy provides read-only access. Note you need to specify any buckets you 
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "Athena",
-            "Effect": "Allow",
-            "Action": [
-                "athena:BatchGetNamedQuery",
-                "athena:BatchGetQueryExecution",
-                "athena:GetCatalogs",
-                "athena:GetExecutionEngine",
-                "athena:GetExecutionEngines",
-                "athena:GetNamedQuery",
-                "athena:GetNamespace",
-                "athena:GetNamespaces",
-                "athena:GetQueryExecution",
-                "athena:GetQueryExecutions",
-                "athena:GetQueryResults",
-                "athena:GetQueryResultsStream",
-                "athena:GetTable",
-                "athena:GetTables",
-                "athena:GetWorkGroup",
-                "athena:ListNamedQueries",
-                "athena:ListQueryExecutions",
-                "athena:ListTagsForResource",
-                "athena:ListWorkGroups",
-                "athena:StartQueryExecution",
-                "athena:StopQueryExecution"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "Glue",
-            "Effect": "Allow",
-            "Action": [
-                "glue:BatchGetPartition",
-                "glue:GetDatabase",
-                "glue:GetDatabases",
-                "glue:GetPartition",
-                "glue:GetPartitions",
-                "glue:GetTable",
-                "glue:GetTables",
-                "glue:GetTableVersion",
-                "glue:GetTableVersions"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "S3ReadAccess",
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:ListBucket",
-                "s3:GetBucketLocation"
-            ],
-            "Resource": [
-                "arn:aws:s3:::bucket1",
-                "arn:aws:s3:::bucket1/*",
-                "arn:aws:s3:::bucket2",
-                "arn:aws:s3:::bucket2/*"
-            ]
-        },
-        {
-            "Sid": "AthenaResultsBucket",
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:AbortMultipartUpload",
-                "s3:ListBucket",
-                "s3:GetBucketLocation"
-            ],
-            "Resource": [
-                "arn:aws:s3:::bucket2",
-                "arn:aws:s3:::bucket2/*"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Athena",
+      "Effect": "Allow",
+      "Action": [
+        "athena:BatchGetNamedQuery",
+        "athena:BatchGetQueryExecution",
+        "athena:GetCatalogs",
+        "athena:GetExecutionEngine",
+        "athena:GetExecutionEngines",
+        "athena:GetNamedQuery",
+        "athena:GetNamespace",
+        "athena:GetNamespaces",
+        "athena:GetQueryExecution",
+        "athena:GetQueryExecutions",
+        "athena:GetQueryResults",
+        "athena:GetQueryResultsStream",
+        "athena:GetTable",
+        "athena:GetTables",
+        "athena:GetWorkGroup",
+        "athena:ListNamedQueries",
+        "athena:ListQueryExecutions",
+        "athena:ListTagsForResource",
+        "athena:ListWorkGroups",
+        "athena:StartQueryExecution",
+        "athena:StopQueryExecution"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Glue",
+      "Effect": "Allow",
+      "Action": [
+        "glue:BatchGetPartition",
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:GetTableVersion",
+        "glue:GetTableVersions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3ReadAccess",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": [
+        "arn:aws:s3:::bucket1",
+        "arn:aws:s3:::bucket1/*",
+        "arn:aws:s3:::bucket2",
+        "arn:aws:s3:::bucket2/*"
+      ]
+    },
+    {
+      "Sid": "AthenaResultsBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:AbortMultipartUpload",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": ["arn:aws:s3:::bucket2", "arn:aws:s3:::bucket2/*"]
+    }
+  ]
 }
 ```
 
@@ -187,28 +184,28 @@ If your customer-base needs access to create tables for whatever reason, they wi
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "glue:BatchCreatePartition",
-                "glue:UpdateDatabase",
-                "glue:DeleteDatabase",
-                "glue:CreateTable",
-                "glue:CreateDatabase",
-                "glue:UpdateTable",
-                "glue:BatchDeletePartition",
-                "glue:BatchDeleteTable",
-                "glue:DeleteTable",
-                "glue:CreatePartition",
-                "glue:DeletePartition",
-                "glue:UpdatePartition"
-            ],
-            "Resource": "*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Allow",
+      "Action": [
+        "glue:BatchCreatePartition",
+        "glue:UpdateDatabase",
+        "glue:DeleteDatabase",
+        "glue:CreateTable",
+        "glue:CreateDatabase",
+        "glue:UpdateTable",
+        "glue:BatchDeletePartition",
+        "glue:BatchDeleteTable",
+        "glue:DeleteTable",
+        "glue:CreatePartition",
+        "glue:DeletePartition",
+        "glue:UpdatePartition"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
