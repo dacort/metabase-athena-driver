@@ -2,7 +2,6 @@
   (:require [metabase.driver.hive-parser :as hsp]
             [metabase.driver.sql-jdbc.sync :as sql-jdbc.sync]))
 
-
 (defn- column->base-type [column-type]
   (sql-jdbc.sync/database-type->base-type :athena (keyword (re-find #"\w+" column-type))))
 

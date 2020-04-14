@@ -1,6 +1,6 @@
 (ns metabase.driver.athena
-    (:refer-clojure :exclude [second])
-    (:require [metabase.driver.schema-parser :as schema-parser]
+  (:refer-clojure :exclude [second])
+  (:require [metabase.driver.schema-parser :as schema-parser]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -28,11 +28,10 @@
              [i18n :refer [trs]]]
             [metabase.util :as u]
             [clojure.string :as string])
-    (:import [java.sql DatabaseMetaData Timestamp]
-             (java.time OffsetDateTime ZonedDateTime)))
+  (:import [java.sql DatabaseMetaData Timestamp]
+           (java.time OffsetDateTime ZonedDateTime)))
 
 (driver/register! :athena, :parent #{:sql-jdbc, ::legacy/use-legacy-classes-for-read-and-set})
-
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
 ;;; |                                          metabase.driver method impls                                          |
@@ -51,20 +50,20 @@
 
 (defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db], :as details}]
   (-> (merge
-   {:classname        "com.simba.athena.jdbc.Driver"
-    :subprotocol      "awsathena"
-    :subname          (str "//athena." region ".amazonaws.com:443")
-    :user             access_key
-    :password         secret_key
-    :s3_staging_dir   s3_staging_dir
-    :workgroup        workgroup
-    :AwsRegion        region
+       {:classname        "com.simba.athena.jdbc.Driver"
+        :subprotocol      "awsathena"
+        :subname          (str "//athena." region ".amazonaws.com:443")
+        :user             access_key
+        :password         secret_key
+        :s3_staging_dir   s3_staging_dir
+        :workgroup        workgroup
+        :AwsRegion        region
     ; :LogLevel    6
-    }
-   (when (str/blank? access_key)
-     {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
-   (dissoc details :db))
-   (sql-jdbc.common/handle-additional-options details, :seperator-style :semicolon)))
+}
+       (when (str/blank? access_key)
+         {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
+       (dissoc details :db))
+      (sql-jdbc.common/handle-additional-options details, :seperator-style :semicolon)))
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
 
@@ -193,15 +192,15 @@
 
 (defn sync-table-without-nested-field [driver columns]
   (set
-    (for [{database-type :type_name
-           column-name   :column_name
-           remarks       :remarks} columns]
-      (merge
-        {:name          column-name
-         :database-type database-type
-         :base-type     (database-type->base-type-or-warn driver database-type)}
-        (when (not (str/blank? remarks))
-          {:field-comment remarks})))))
+   (for [{database-type :type_name
+          column-name   :column_name
+          remarks       :remarks} columns]
+     (merge
+      {:name          column-name
+       :database-type database-type
+       :base-type     (database-type->base-type-or-warn driver database-type)}
+      (when (not (str/blank? remarks))
+        {:field-comment remarks})))))
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
 
@@ -221,17 +220,15 @@
       (log/error e (trs "Error retreiving fields for DB {0}.{1}" schema table-name))
       (throw e))))
 
-
 ;; Becuse describe-table-fields might fail, we catch the error here and return an empty set of columns
 
 
 (defmethod driver/describe-table :athena [driver database table]
   (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
-                         (->> (assoc (select-keys table [:name :schema])
+    (->> (assoc (select-keys table [:name :schema])
                 :fields (try
                           (describe-table-fields metadata database driver table)
                           (catch Throwable e (set nil)))))))
-
 
 ;; EXTERNAL_TABLE is required for Athena
 
@@ -262,13 +259,13 @@
 ; If we want to limit the initial connection to a specific database/schema, I think we'd have to do that here...
 (defmethod driver/describe-database :athena [driver database]
   {:tables (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
-                                  (fast-active-tables driver metadata))})
+             (fast-active-tables driver metadata))})
 
 ; Unsure if this is the right way to approach building the parameterized query...but it works
 (defn- prepare-query [driver {:keys [database settings], query :native, :as outer-query}]
   (cond-> outer-query
-          (seq (:params query))
-          (merge {:native {:params nil
+    (seq (:params query))
+    (merge {:native {:params nil
                      :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
 
 (defmethod driver/execute-query :athena [driver query]
