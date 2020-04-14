@@ -142,11 +142,11 @@
 
 (defmethod sql.qp/unix-timestamp->timestamp [:athena :seconds] [_ _ expr] (hsql/call :from_unixtime expr))
 
-(defmethod driver/date-add :athena [_ dt amount unit]
+(defmethod sql.qp/add-interval-honeysql-form :athena [_ hsql-form amount unit]
   (hsql/call :date_add
              (hx/literal (name unit))
              (hsql/raw (int amount))
-             (hx/->timestamp dt)))
+             (hx/->timestamp hsql-form)))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
