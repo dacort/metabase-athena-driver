@@ -268,5 +268,6 @@
     (merge {:native {:params nil
                      :query (unprepare/unprepare driver (cons (:query query) (:params query)))}})))
 
-(defmethod driver/execute-query :athena [driver query]
-  (sql-jdbc.execute/execute-query driver (prepare-query driver, query)))
+(defmethod driver/execute-reducible-query :athena
+  [driver query context respond]
+  ((get-method driver/execute-reducible-query :sql-jdbc) driver (prepare-query driver, query) context respond))
