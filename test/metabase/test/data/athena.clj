@@ -35,12 +35,12 @@
 ;;; ----------------------------------------------- Connection Details -----------------------------------------------
 
 (defmethod tx/dbdef->connection-details :athena [_ context {:keys [database-name]}]
-           (merge
-             {:region   (tx/db-test-env-var-or-throw :athena :region)
-              :access_key      (tx/db-test-env-var-or-throw :athena :access-key)
-              :secret_key  (tx/db-test-env-var-or-throw :athena :secret-key)
-              :s3_staging_dir (tx/db-test-env-var-or-throw :athena :s3-staging-dir)
-              :workgroup "primary"}))
+  (merge
+   {:region   (tx/db-test-env-var-or-throw :athena :region)
+    :access_key      (tx/db-test-env-var-or-throw :athena :access-key)
+    :secret_key  (tx/db-test-env-var-or-throw :athena :secret-key)
+    :s3_staging_dir (tx/db-test-env-var-or-throw :athena :s3-staging-dir)
+    :workgroup "primary"}))
 
 ;; TODO: Implement this because the tests try to add a table with a hyphen and Athena doesn't support that
 ;(defmethod tx/format-name :athena
@@ -80,18 +80,18 @@
 (defmethod sql.tx/create-table-sql :athena
   [driver {:keys [database-name]} {:keys [table-name], :as tabledef}]
   (let [field-definitions (conj (:field-definitions tabledef) {:field-name "id", :base-type  :type/Integer})]
-  (format "CREATE EXTERNAL TABLE `%s`.`%s` (%s) LOCATION '%stest-data/%s/'"
-          database-name
-          table-name
-          (->> field-definitions
-               (map (fn [{:keys [field-name base-type]}]
-                      (format "%s %s" field-name (if (map? base-type)
-                                                                (:native base-type)
-                                                                (sql.tx/field-base-type->sql-type driver base-type)))))
-               (interpose ", ")
-               (apply str))
-          (tx/db-test-env-var-or-throw :athena :s3-staging-dir)
-          table-name)))
+    (format "CREATE EXTERNAL TABLE `%s`.`%s` (%s) LOCATION '%stest-data/%s/'"
+            database-name
+            table-name
+            (->> field-definitions
+                 (map (fn [{:keys [field-name base-type]}]
+                        (format "%s %s" field-name (if (map? base-type)
+                                                     (:native base-type)
+                                                     (sql.tx/field-base-type->sql-type driver base-type)))))
+                 (interpose ", ")
+                 (apply str))
+            (tx/db-test-env-var-or-throw :athena :s3-staging-dir)
+            table-name)))
 
 ;; The Athena JDBC driver doesn't support parameterized queries.
 ;; So go ahead and deparameterize all the statements for now.

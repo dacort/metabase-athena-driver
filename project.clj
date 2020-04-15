@@ -1,13 +1,13 @@
-(defproject metabase/athena-driver "0.3.0-athena-jdbc-2.0.7"
+(defproject metabase/athena-driver "0.3.0-athena-jdbc-2.0.9"
   :min-lein-version "2.5.0"
 
   :dependencies
-  [[athena/athena-jdbc "2.0.7"]]
+  [[athena/athena-jdbc "2.0.9"]]
 
 ;   :repositories
-;  [["athena" {:url "https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar"}]]
+;  [["athena" {:url "https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/AthenaJDBC42_2.0.9.jar"}]]
 ; TODO: Download from source URL
-; For now, you have to download the jar above into ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar
+; For now, you have to download the jar above into ~/.m2/repository/athena/athena-jdbc/2.0.9/athena-jdbc-2.0.9.jar
 
   :aliases
   {"test"       ["with-profile" "+unit_tests" "test"]}

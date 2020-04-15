@@ -9,7 +9,7 @@
 (defn get-parent-qualifiers [field-identifier]
   (:components field-identifier))
 
-(defn format-field-identifier[field-identifier]
+(defn format-field-identifier [field-identifier]
   (apply hx/identifier :field field-identifier))
 
 (defn get-field-full-name [qualifiers field-name parent-id]
@@ -23,6 +23,6 @@
                      (let [{schema :schema, table-name :name} (qp.store/table table-id)]
                        [schema table-name]))]
     (->>
-      (get-field-full-name qualifiers field-name parent-id)
-      (format-field-identifier)
-      (sql.qp/cast-unix-timestamp-field-if-needed driver field))))
+     (get-field-full-name qualifiers field-name parent-id)
+     (format-field-identifier)
+     (sql.qp/cast-unix-timestamp-field-if-needed driver field))))

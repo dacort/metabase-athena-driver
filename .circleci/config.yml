@@ -17,6 +17,8 @@ jobs:
       LEIN_ROOT: "true"
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
+      # Configure the branch to build against
+      BRANCH: v0.35.2
     steps:
       - checkout:
           path: metabase-athena-driver
@@ -32,8 +34,8 @@ jobs:
       - run:
           name: Download Athena driver
           command: |
-            mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.7/
-            wget -O ~/.m2/repository/athena/athena-jdbc/2.0.7/athena-jdbc-2.0.7.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.7/AthenaJDBC42_2.0.7.jar
+            mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.9/
+            wget -O ~/.m2/repository/athena/athena-jdbc/2.0.9/athena-jdbc-2.0.9.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/AthenaJDBC42_2.0.9.jar
       - run:
           name: Build and install Metabase driver components
           working_directory: metabase
@@ -62,7 +64,7 @@ jobs:
           name: Athena unit tests
           working_directory: metabase-athena-driver
           command: lein with-profile +unit_tests test
-  
+
   test-metabase-driver:
     docker:
       - image: circleci/clojure:lein-2.7.1

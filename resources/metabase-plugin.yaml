@@ -1,11 +1,11 @@
 # Complete list of options here: https://github.com/metabase/metabase/wiki/Metabase-Plugin-Manifest-Reference
 info:
   name: Metabase Athena Driver
-  version: 0.3.0-athena-jdbc-2.0.7
+  version: 0.3.0-athena-jdbc-2.0.9
   description: Allows Metabase to connect to AWS Athena databases. Community Supported driver.
 driver:
   name: athena
-  display-name: Athena
+  display-name: Amazon Athena
   lazy-load: true
   parent: sql-jdbc
   connection-properties:
@@ -25,9 +25,9 @@ driver:
         - name: secret_key
         - display-name: Secret Key
     - merge:
-      - additional-options
-      - display-name: Additional Athena connection string options
-        placeholder: 'UseResultsetStreaming=0;LogLevel=6'
+        - additional-options
+        - display-name: Additional Athena connection string options
+          placeholder: "UseResultsetStreaming=0;LogLevel=6"
 init:
   - step: load-namespace
     namespace: metabase.driver.athena
