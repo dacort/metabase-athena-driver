@@ -4,22 +4,65 @@
 
 [![CircleCI](https://img.shields.io/circleci/build/github/dacort/metabase-athena-driver)](https://circleci.com/gh/dacort/metabase-athena-driver)
 [![Latest Release](https://img.shields.io/github/v/release/dacort/metabase-athena-driver.svg?label=latest%20release&include_prereleases)](https://github.com/dacort/metabase-athena-driver/releases)
-![Tested with Metabase v0.34.1](https://img.shields.io/badge/metabase-v0.34.1-blue?)
+![Tested with Metabase v0.35.2](https://img.shields.io/badge/metabase-v0.35.2-blue?)
 [![GitHub license](https://img.shields.io/github/license/dacort/metabase-athena-driver)](https://raw.githubusercontent.com/dacort/metabase-athena-driver/master/LICENSE)
 
 ## Installation
 
-Beginning with Metabase 0.32, drivers must be stored in a `plugins` directory in the same directory where `metabase.jar` is, or you can specify the directory by setting the environment variable `MB_PLUGINS_DIR`.
+Beginning with Metabase 0.32, drivers must be stored in a `plugins` directory in the same directory where `metabase.jar` is, or you can specify the directory by setting the environment variable `MB_PLUGINS_DIR`. There are a few options to get up and running with a custom driver.
+
+### Docker
+
+This repository has an example [`Dockerfile`](./Dockerfile) you can use to run Metabase with the Amazon Athena driver pre-loaded:
+
+```shell
+git clone https://github.com/dacort/metabase-athena-driver.git
+cd metabase-athena-driver
+docker build -t metabase/athena .
+docker run --name metabase-athena -p 3000:3000 metabase/athena
+```
+
+Then open http://localhost:3000 and skip down to [Configuring](#Configuring)
 
 ### Download Metabase Jar and Run
 
 1. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
-2. Download the Athena driver jar from this repository's "Releases" page
+2. Download the Athena driver jar from this repository's ["Releases"](https://github.com/dacort/metabase-athena-driver/releases) page
 3. Create a directory and copy the `metabase.jar` to it.
 4. In that directory create a sub-directory called `plugins`.
 5. Copy the Athena driver jar to the `plugins` directory.
 6. Make sure you are the in the directory where your `metabase.jar` lives.
 7. Run `java -jar metabase.jar`.
+
+In either case, you should see a message on startup similar to:
+
+```
+04-15 06:14:08 DEBUG plugins.lazy-loaded-driver :: Registering lazy loading driver :athena...
+04-15 06:14:08 INFO driver.impl :: Registered driver :athena (parents: [:sql-jdbc]) 🚚
+```
+
+## Configuring
+
+Once you've started up Metabase, go to add a database and select "Amazon Athena".
+
+You'll need to provide the AWS region, an access key and secret key, and an S3 bucket and prefix where query results will be written to.
+
+Please note:
+
+- The provided bucket must be in the same region you specify.
+- If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html) will be used.
+- The initial sync can take some time depending on how many databases and tables you have.
+
+If you need an example IAM policy for providing read-only access to your customer-base, check out the [Example IAM Policy](#example-iam-policy) below.
+
+You can provide additional options if necessary. For example, to disable result set streaming and enable `TRACE`-level debugging, use `UseResultsetStreaming=0;LogLevel=6`.
+
+Result set streaming is a performance optimization that streams results from Athena rather than using pagination logic, however it requries outbound access to TCP port 444 and not all organizations allow that.
+
+Other options can be found in the "Driver Configuration Options" section of the [Athena JDBC Driver Installation and Configuration
+Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
+
+## Contributing
 
 ### Build from source
 
@@ -63,28 +106,7 @@ You should see a message on startup similar to:
 2019-05-07 23:27:32 INFO metabase.driver :: Registered driver :athena (parents: #{:sql-jdbc}) 🚚
 ```
 
-## Configuring
-
-Once you've started up Metabase, go to add a database and select "Athena".
-
-You'll need to provide the AWS region, an access key and secret key, and an S3 bucket and prefix where query results will be written to.
-
-Please note:
-
-- The provided bucket must be in the same region you specify.
-- If you do _not_ provide an access key, the [default credentials chain](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html).
-- The initial sync can take some time depending on how many databases and tables you have.
-
-If you need an example IAM policy for providing read-only access to your customer-base, check out the [Example IAM Policy](#example-iam-policy) below.
-
-You can provide additional options if necessary. For example, to disable result set streaming and enable `TRACE`-level debugging, use `UseResultsetStreaming=0;LogLevel=6`.
-
-Result set streaming is a performance optimization that streams results from Athena rather than using pagination logic, however it requries outbound access to TCP port 444 and not all organizations allow that.
-
-Other options can be found in the "Driver Configuration Options" section of the [Athena JDBC Driver Installation and Configuration
-Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
-
-## Testing
+### Testing
 
 There are two different sets of tests in the project.
 
