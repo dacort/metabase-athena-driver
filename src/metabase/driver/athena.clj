@@ -48,11 +48,18 @@
 
 ;;; ---------------------------------------------- sql-jdbc.connection -----------------------------------------------
 
+(defn endpoint-for-region
+  "Returns the endpoint URL for a specific region"
+  [region]
+  (cond
+    (str/starts-with? region "cn-") ".amazonaws.com.cn"
+    :else ".amazonaws.com"))
+
 (defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db], :as details}]
   (-> (merge
        {:classname        "com.simba.athena.jdbc.Driver"
         :subprotocol      "awsathena"
-        :subname          (str "//athena." region ".amazonaws.com:443")
+        :subname          (str "//athena." region (endpoint-for-region region) ":443")
         :user             access_key
         :password         secret_key
         :s3_staging_dir   s3_staging_dir
