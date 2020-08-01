@@ -20,7 +20,7 @@ data                	struct<name:string> 	from deserializer")
       (is (=
            #{{:name "key", :base-type :type/Integer, :database-type "int", :database-position 0}
              {:name "data", :base-type :type/Dictionary, :database-type "struct"
-              :nested-fields #{{:name "name", :base-type :type/Text, :database-type "string"}}, :database-position 1}}
+              :nested-fields #{{:name "name", :base-type :type/Text, :database-type "string", :database-position 1}}, :database-position 1}}
            (sync-table-with-nested-field "test" "test" "test")))))
 
   (testing "sync without nested fields"

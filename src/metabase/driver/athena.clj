@@ -183,8 +183,8 @@
 (defn sync-table-with-nested-field [database schema table-name]
   (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
        (remove-invalid-columns)
-       (map schema-parser/parse-schema)
        (map-indexed #(merge %2 {:database-position %1}))
+       (map schema-parser/parse-schema)
        (doall)
        (set)))
 
