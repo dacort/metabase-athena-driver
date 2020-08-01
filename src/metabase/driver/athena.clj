@@ -5,6 +5,7 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
+            [medley.core :as m]
             [metabase.query-processor]
             [metabase.models
              [field :as field :refer [Field]]]
@@ -59,7 +60,7 @@
         :workgroup        workgroup
         :AwsRegion        region
     ; :LogLevel    6
-}
+        }
        (when (str/blank? access_key)
          {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
        (dissoc details :db))
@@ -157,7 +158,7 @@
                             database-type))
           :type/*)))
 
-(defn- run-query
+(defn run-query
   "Workaround for avoiding the usage of 'advance' jdbc feature that are not implemented by the driver yet.
    Such as prepare statement"
   [database query]
@@ -187,18 +188,20 @@
   (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
        (remove-invalid-columns)
        (map schema-parser/parse-schema)
+       (map-indexed #(merge %2 {:database-position %1}))
        (doall)
        (set)))
 
 (defn sync-table-without-nested-field [driver columns]
   (set
-   (for [{database-type :type_name
-          column-name   :column_name
-          remarks       :remarks} columns]
+   (for [[idx {database-type :type_name
+               column-name   :column_name
+               remarks       :remarks}] (m/indexed columns)]
      (merge
-      {:name          column-name
-       :database-type database-type
-       :base-type     (database-type->base-type-or-warn driver database-type)}
+      {:name              column-name
+       :database-type     database-type
+       :base-type         (database-type->base-type-or-warn driver database-type)
+       :database-position idx}
       (when (not (str/blank? remarks))
         {:field-comment remarks})))))
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
@@ -231,8 +234,6 @@
                           (catch Throwable e (set nil)))))))
 
 ;; EXTERNAL_TABLE is required for Athena
-
-
 (defn- get-tables [^DatabaseMetaData metadata, ^String schema-or-nil, ^String db-name-or-nil]
   ;; tablePattern "%" = match all tables
   (with-open [rs (.getTables metadata db-name-or-nil schema-or-nil "%"

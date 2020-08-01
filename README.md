@@ -64,6 +64,11 @@ Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.
 
 ## Contributing
 
+### Prerequisites
+
+- [Leiningen](https://leiningen.org/)
+- [Install metabase-core](https://github.com/metabase/metabase/wiki/Writing-a-Driver:-Packaging-a-Driver-&-Metabase-Plugin-Basics#installing-metabase-core-locally)
+
 ### Build from source
 
 I'm not familiar enough with `lein` to know if there is a better way to include a jar from a static URL, so for the time being we download it manually.
