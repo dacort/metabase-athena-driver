@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [second])
   (:require [metabase.driver.schema-parser :as schema-parser]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
             [medley.core :as m]
@@ -14,21 +14,17 @@
              [core :as hsql]]
             [java-time :as t]
             [metabase.driver :as driver]
-            [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
-             [execute :as sql-jdbc.execute]
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.util
-             [date-2 :as u.date]
              [honeysql-extensions :as hx]
              [i18n :refer [trs]]]
-            [metabase.util :as u]
-            [clojure.string :as string])
+            [metabase.util :as u])
   (:import [java.sql DatabaseMetaData Timestamp]
            (java.time OffsetDateTime ZonedDateTime)))
 
@@ -61,7 +57,7 @@
         :AwsRegion        region
     ; :LogLevel    6
         }
-       (when (str/blank? access_key)
+       (when (string/blank? access_key)
          {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
        (dissoc details :db))
       (sql-jdbc.common/handle-additional-options details, :seperator-style :semicolon)))
@@ -202,7 +198,7 @@
        :database-type     database-type
        :base-type         (database-type->base-type-or-warn driver database-type)
        :database-position idx}
-      (when (not (str/blank? remarks))
+      (when (not (string/blank? remarks))
         {:field-comment remarks})))))
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
@@ -250,7 +246,7 @@
              (let [remarks (:remarks table)]
                {:name        (:table_name table)
                 :schema      schema
-                :description (when-not (str/blank? remarks)
+                :description (when-not (string/blank? remarks)
                                remarks)}))))))
 
 ;; You may want to exclude a specific database - this can be done here
