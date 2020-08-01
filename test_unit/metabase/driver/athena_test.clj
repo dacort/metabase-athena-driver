@@ -1,6 +1,6 @@
 (ns metabase.driver.athena-test
   (:require [clojure.test :refer :all]
-            [metabase.driver.athena :refer [run-query sync-table-with-nested-field sync-table-without-nested-field]]))
+            [metabase.driver.athena :refer [sync-table-with-nested-field sync-table-without-nested-field]]))
 
 (def nested_schema_str
   "key                 	int                 	from deserializer
@@ -16,7 +16,7 @@ data                	struct<name:string> 	from deserializer")
 
 (deftest syncer
   (testing "sync with nested fields"
-    (with-redefs [run-query (fn [_ _] nested_schema)]
+    (with-redefs [metabase.driver.athena/run-query (fn [_ _] nested_schema)]
       (is (=
            #{{:name "key", :base-type :type/Integer, :database-type "int", :database-position 0}
              {:name "data", :base-type :type/Dictionary, :database-type "struct"

@@ -158,7 +158,7 @@
                             database-type))
           :type/*)))
 
-(defn run-query
+(defn- run-query
   "Workaround for avoiding the usage of 'advance' jdbc feature that are not implemented by the driver yet.
    Such as prepare statement"
   [database query]
