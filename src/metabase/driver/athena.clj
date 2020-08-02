@@ -49,7 +49,7 @@
   "Returns the endpoint URL for a specific region"
   [region]
   (cond
-    (str/starts-with? region "cn-") ".amazonaws.com.cn"
+    (string/starts-with? region "cn-") ".amazonaws.com.cn"
     :else ".amazonaws.com"))
 
 (defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db], :as details}]
