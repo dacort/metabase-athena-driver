@@ -2,9 +2,10 @@
   (:refer-clojure :exclude [second])
   (:require [metabase.driver.schema-parser :as schema-parser]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
+            [medley.core :as m]
             [metabase.query-processor]
             [metabase.models
              [field :as field :refer [Field]]]
@@ -13,21 +14,17 @@
              [core :as hsql]]
             [java-time :as t]
             [metabase.driver :as driver]
-            [metabase.driver.common :as driver.common]
             [metabase.driver.sql-jdbc
              [common :as sql-jdbc.common]
              [connection :as sql-jdbc.conn]
-             [execute :as sql-jdbc.execute]
              [sync :as sql-jdbc.sync]]
             [metabase.driver.sql-jdbc.execute.legacy-impl :as legacy]
             [metabase.driver.sql.query-processor :as sql.qp]
             [metabase.driver.sql.util.unprepare :as unprepare]
             [metabase.util
-             [date-2 :as u.date]
              [honeysql-extensions :as hx]
              [i18n :refer [trs]]]
-            [metabase.util :as u]
-            [clojure.string :as string])
+            [metabase.util :as u])
   (:import [java.sql DatabaseMetaData Timestamp]
            (java.time OffsetDateTime ZonedDateTime)))
 
@@ -52,7 +49,7 @@
   "Returns the endpoint URL for a specific region"
   [region]
   (cond
-    (str/starts-with? region "cn-") ".amazonaws.com.cn"
+    (string/starts-with? region "cn-") ".amazonaws.com.cn"
     :else ".amazonaws.com"))
 
 (defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db], :as details}]
@@ -66,8 +63,8 @@
         :workgroup        workgroup
         :AwsRegion        region
     ; :LogLevel    6
-}
-       (when (str/blank? access_key)
+        }
+       (when (string/blank? access_key)
          {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
        (dissoc details :db))
       (sql-jdbc.common/handle-additional-options details, :seperator-style :semicolon)))
@@ -193,20 +190,22 @@
 (defn sync-table-with-nested-field [database schema table-name]
   (->> (run-query database (str "DESCRIBE `" schema "`.`" table-name "`;"))
        (remove-invalid-columns)
+       (map-indexed #(merge %2 {:database-position %1}))
        (map schema-parser/parse-schema)
        (doall)
        (set)))
 
 (defn sync-table-without-nested-field [driver columns]
   (set
-   (for [{database-type :type_name
-          column-name   :column_name
-          remarks       :remarks} columns]
+   (for [[idx {database-type :type_name
+               column-name   :column_name
+               remarks       :remarks}] (m/indexed columns)]
      (merge
-      {:name          column-name
-       :database-type database-type
-       :base-type     (database-type->base-type-or-warn driver database-type)}
-      (when (not (str/blank? remarks))
+      {:name              column-name
+       :database-type     database-type
+       :base-type         (database-type->base-type-or-warn driver database-type)
+       :database-position idx}
+      (when (not (string/blank? remarks))
         {:field-comment remarks})))))
 ;; Not all tables in the Data Catalog are guaranted to be compatible with Athena
 ;; If an exception is thrown, log and throw an error
@@ -238,8 +237,6 @@
                           (catch Throwable e (set nil)))))))
 
 ;; EXTERNAL_TABLE is required for Athena
-
-
 (defn- get-tables [^DatabaseMetaData metadata, ^String schema-or-nil, ^String db-name-or-nil]
   ;; tablePattern "%" = match all tables
   (with-open [rs (.getTables metadata db-name-or-nil schema-or-nil "%"
@@ -256,7 +253,7 @@
              (let [remarks (:remarks table)]
                {:name        (:table_name table)
                 :schema      schema
-                :description (when-not (str/blank? remarks)
+                :description (when-not (string/blank? remarks)
                                remarks)}))))))
 
 ;; You may want to exclude a specific database - this can be done here
