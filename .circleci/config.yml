@@ -34,8 +34,8 @@ jobs:
       - run:
           name: Download Athena driver
           command: |
-            mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.9/
-            wget -O ~/.m2/repository/athena/athena-jdbc/2.0.9/athena-jdbc-2.0.9.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/AthenaJDBC42_2.0.9.jar
+            mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.13/
+            wget -O ~/.m2/repository/athena/athena-jdbc/2.0.13/athena-jdbc-2.0.13.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.13/AthenaJDBC42_2.0.13.jar
       - run:
           name: Build and install Metabase driver components
           working_directory: metabase

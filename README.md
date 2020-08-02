@@ -60,7 +60,7 @@ You can provide additional options if necessary. For example, to disable result 
 Result set streaming is a performance optimization that streams results from Athena rather than using pagination logic, however it requries outbound access to TCP port 444 and not all organizations allow that.
 
 Other options can be found in the "Driver Configuration Options" section of the [Athena JDBC Driver Installation and Configuration
-Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
+Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.13/docs/Simba+Athena+JDBC+Driver+Install+and+Configuration+Guide.pdf).
 
 ## Contributing
 
@@ -78,8 +78,8 @@ I'm not familiar enough with `lein` to know if there is a better way to include 
 2. Download the Athena driver into your local Maven repo
 
    ```shell
-   mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.9/
-   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.9/athena-jdbc-2.0.9.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.9/AthenaJDBC42_2.0.9.jar
+   mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.13/
+   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.13/athena-jdbc-2.0.13.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.13/AthenaJDBC42_2.0.13.jar
    ```
 
 3. Clone this repo
