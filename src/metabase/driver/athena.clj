@@ -240,7 +240,7 @@
 (defn- get-tables [^DatabaseMetaData metadata, ^String schema-or-nil, ^String db-name-or-nil]
   ;; tablePattern "%" = match all tables
   (with-open [rs (.getTables metadata db-name-or-nil schema-or-nil "%"
-                             (into-array String ["EXTERNAL_TABLE", "EXTERNAL TABLE" "TABLE", "VIEW", "FOREIGN TABLE", "MATERIALIZED VIEW"]))]
+                             (into-array String ["EXTERNAL_TABLE", "EXTERNAL TABLE" "TABLE", "VIEW", "VIRTUAL_VIEW", "FOREIGN TABLE", "MATERIALIZED VIEW"]))]
     (vec (jdbc/metadata-result rs))))
 
 ;; Required because we're calling our own custom private get-tables method to support Athena
