@@ -245,6 +245,7 @@
 
 ;; Required because we're calling our own custom private get-tables method to support Athena
 (defn- fast-active-tables [driver, ^DatabaseMetaData metadata, & [db-name-or-nil]]
+  ;; TODO: Catch errors here so a single exception doesn't fail the entire schema
   (with-open [rs (.getSchemas metadata)]
     (let [all-schemas (set (map :table_schem (jdbc/metadata-result rs)))
           schemas     (set/difference all-schemas (sql-jdbc.sync/excluded-schemas driver))]
