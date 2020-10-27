@@ -155,10 +155,13 @@ This policy provides read-only access. Note you need to specify any buckets you 
         "athena:GetTable",
         "athena:GetTables",
         "athena:GetWorkGroup",
+        "athena:ListDatabases",
+        "athena:ListDataCatalogs",
         "athena:ListNamedQueries",
         "athena:ListQueryExecutions",
         "athena:ListTagsForResource",
         "athena:ListWorkGroups",
+        "athena:ListTableMetadata",
         "athena:StartQueryExecution",
         "athena:StopQueryExecution"
       ],
