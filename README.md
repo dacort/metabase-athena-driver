@@ -71,28 +71,27 @@ Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.
 
 ### Build from source
 
-I'm not familiar enough with `lein` to know if there is a better way to include a jar from a static URL, so for the time being we download it manually.
-
 1. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
 
-2. Download the Athena driver into your local Maven repo
-
-   ```shell
-   mkdir -p ~/.m2/repository/athena/athena-jdbc/2.0.13/
-   wget -O ~/.m2/repository/athena/athena-jdbc/2.0.13/athena-jdbc-2.0.13.jar https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.0.13/AthenaJDBC42_2.0.13.jar
-   ```
-
-3. Clone this repo
+2. Clone this repo
 
    ```shell
    git clone https://github.com/dacort/metabase-athena-driver
+   cd metabase-athena-driver/
+   ```
+
+3. Download the Athena driver into a local in-project Maven repo
+
+   ```shell
+   make download-jar
    ```
 
 4. Build the jar
 
    ```shell
-   cd metabase-athena-driver/
-   DEBUG=1 LEIN_SNAPSHOTS_IN_RELEASE=true lein uberjar
+   make build
+   # Alternative:
+   #   DEBUG=1 LEIN_SNAPSHOTS_IN_RELEASE=true lein uberjar
    ```
 
 5. Let's assume we download `metabase.jar` to `~/metabae/` and we built the project above. Copy the built jar to the Metabase plugins directly and run Metabase from there!
