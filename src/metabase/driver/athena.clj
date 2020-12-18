@@ -127,7 +127,7 @@
 (defmethod sql.qp/date [:athena :minute]          [_ _ expr] (hsql/call :date_trunc (hx/literal :minute) (expr->literal expr)))
 (defmethod sql.qp/date [:athena :hour]            [_ _ expr] (hsql/call :date_trunc (hx/literal :hour) (expr->literal expr)))
 (defmethod sql.qp/date [:athena :day]             [_ _ expr] (hsql/call :date_trunc (hx/literal :day) expr))
-(defmethod sql.qp/date [:athena :week]            [_ _ expr] (hsql/call :date_trunc (hx/literal :week) expr))
+(defmethod sql.qp/date [:athena :week]            [_ _ expr] (sql.qp/adjust-start-of-week :presto (partial hsql/call :date_trunc (hx/literal :week)) expr))
 (defmethod sql.qp/date [:athena :month]           [_ _ expr] (hsql/call :date_trunc (hx/literal :month) expr))
 (defmethod sql.qp/date [:athena :quarter]         [_ _ expr] (hsql/call :date_trunc (hx/literal :quarter) expr))
 (defmethod sql.qp/date [:athena :year]            [_ _ expr] (hsql/call :date_trunc (hx/literal :year) expr))
@@ -135,7 +135,7 @@
 ; Extraction functions
 (defmethod sql.qp/date [:athena :minute-of-hour]  [_ _ expr] (hsql/call :minute expr))
 (defmethod sql.qp/date [:athena :hour-of-day]     [_ _ expr] (hsql/call :hour expr))
-(defmethod sql.qp/date [:athena :day-of-week]     [_ _ expr] (hsql/call :day_of_week expr))
+(defmethod sql.qp/date [:athena :day-of-week]     [_ _ expr] (sql.qp/adjust-day-of-week :presto (hsql/call :day_of_week expr)))
 (defmethod sql.qp/date [:athena :day-of-month]    [_ _ expr] (hsql/call :day_of_month expr))
 (defmethod sql.qp/date [:athena :day-of-year]     [_ _ expr] (hsql/call :day_of_year expr))
 (defmethod sql.qp/date [:athena :week-of-year]    [_ _ expr] (hsql/call :week_of_year expr))
@@ -276,3 +276,7 @@
 (defmethod driver/execute-reducible-query :athena
   [driver query context respond]
   ((get-method driver/execute-reducible-query :sql-jdbc) driver (prepare-query driver, query) context respond))
+
+(defmethod driver/db-start-of-week :athena
+  [_]
+  :monday)
