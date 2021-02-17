@@ -25,4 +25,4 @@
     (->>
      (get-field-full-name qualifiers field-name parent-id)
      (format-field-identifier)
-     (sql.qp/cast-unix-timestamp-field-if-needed driver field))))
+     (sql.qp/cast-field-if-needed driver field))))
