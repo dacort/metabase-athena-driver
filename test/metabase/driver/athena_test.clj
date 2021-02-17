@@ -1,6 +1,7 @@
 (ns metabase.driver.athena-test
   (:require [clojure.test :refer :all]
             [metabase.driver :as driver]
+            [metabase.test :as mt]
             [metabase.test.data :as data]
             [metabase.test.data
              [datasets :as datasets]]
@@ -49,74 +50,75 @@
         (m/dissoc-in [:data :insights]))))
 
 ;; test relative date query - see issue #26
-(datasets/expect-with-driver :athena
-                             {:row_count         2
-                              :status            :completed
-                              :data              {:rows        [[0 "damon" "2006-01-02T15:04:05.123Z"]
-                                                                [1 "bob"   "2005-12-31T15:04:05.123Z"]]
-                                                  :cols        [{:name         "id"
-                                                                 :source       :native
-                                                                 :display_name "id"
-                                                                 :field_ref    [:field-literal "id" :type/Integer]
-                                                                 :base_type     :type/Integer}
-                                                                {:name         "name"
-                                                                 :source       :native
-                                                                 :display_name "name"
-                                                                 :field_ref    [:field-literal "name" :type/Text]
-                                                                 :base_type     :type/Text}
-                                                                {:name         "timestamp"
-                                                                 :source       :native
-                                                                 :display_name "timestamp"
-                                                                 :field_ref    [:field-literal "timestamp" :type/DateTime]
-                                                                 :base_type     :type/DateTime}]
-                                                  :native_form       {:query relative-date-query}
-                                                  :results_timezone   "UTC"}}
-
-                             (-> (process-native-query relative-date-query)))
+(deftest athena-relative-date-query
+  (mt/test-driver :athena
+                  (is (= {:row_count         2
+                          :status            :completed
+                          :data              {:rows        [[0 "damon" "2006-01-02T15:04:05.123Z"]
+                                                            [1 "bob"   "2005-12-31T15:04:05.123Z"]]
+                                              :cols        [{:name         "id"
+                                                             :source       :native
+                                                             :display_name "id"
+                                                             :field_ref    [:field-literal "id" :type/Integer]
+                                                             :base_type     :type/Integer}
+                                                            {:name         "name"
+                                                             :source       :native
+                                                             :display_name "name"
+                                                             :field_ref    [:field-literal "name" :type/Text]
+                                                             :base_type     :type/Text}
+                                                            {:name         "timestamp"
+                                                             :source       :native
+                                                             :display_name "timestamp"
+                                                             :field_ref    [:field-literal "timestamp" :type/DateTime]
+                                                             :base_type     :type/DateTime}]
+                                              :native_form       {:query relative-date-query}
+                                              :results_timezone   "UTC"}}
+                         (-> (process-native-query relative-date-query))))))
 
 ;; test that all date/datetime fields return values
-(datasets/expect-with-driver :athena
-                             {:row_count     1
-                              :status        :completed
-                              :data          {:rows        [["2006-01-02T00:00:00Z" "15:04:05.000" "15:04:05.000 America/Los_Angeles" "2006-01-02T15:04:05Z" "2006-01-02 15:04:05.000 America/Los_Angeles" "0-3" "2 00:00:00.000"]]
-                                              :cols        [{:name           "type_date"
-                                                             :display_name   "type_date"
-                                                             :base_type      :type/Date
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_date" :type/Date]}
-                                                            {:name           "type_time"
-                                                             :display_name   "type_time"
-                                                             :base_type      :type/Text
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_time" :type/Text]}
-                                                            {:name           "type_time_with_timezone"
-                                                             :display_name   "type_time_with_timezone"
-                                                             :base_type      :type/Text
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_time_with_timezone" :type/Text]}
-                                                            {:name           "type_timestamp"
-                                                             :display_name   "type_timestamp"
-                                                             :base_type      :type/DateTime
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_timestamp" :type/DateTime]}
-                                                            {:name           "type_timestamp_with_timezone"
-                                                             :display_name   "type_timestamp_with_timezone"
-                                                             :base_type      :type/Text
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_timestamp_with_timezone" :type/Text]}
-                                                            {:name           "type_interval_year_to_month"
-                                                             :display_name   "type_interval_year_to_month"
-                                                             :base_type      :type/Text
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_interval_year_to_month" :type/Text]}
-                                                            {:name           "type_interval_day_to_second"
-                                                             :display_name   "type_interval_day_to_second"
-                                                             :base_type      :type/Text
-                                                             :source         :native
-                                                             :field_ref      [:field-literal "type_interval_day_to_second" :type/Text]}]
-                                              :native_form {:query datetime-types-query}
-                                              :results_timezone    "UTC"}}
-                             (-> (process-native-query datetime-types-query)))
+(deftest athena-datetime-fields
+  (mt/test-driver :athena
+                  (is (= {:row_count     1
+                          :status        :completed
+                          :data          {:rows        [["2006-01-02T00:00:00Z" "15:04:05.000" "15:04:05.000 America/Los_Angeles" "2006-01-02T15:04:05Z" "2006-01-02 15:04:05.000 America/Los_Angeles" "0-3" "2 00:00:00.000"]]
+                                          :cols        [{:name           "type_date"
+                                                         :display_name   "type_date"
+                                                         :base_type      :type/Date
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_date" :type/Date]}
+                                                        {:name           "type_time"
+                                                         :display_name   "type_time"
+                                                         :base_type      :type/Text
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_time" :type/Text]}
+                                                        {:name           "type_time_with_timezone"
+                                                         :display_name   "type_time_with_timezone"
+                                                         :base_type      :type/Text
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_time_with_timezone" :type/Text]}
+                                                        {:name           "type_timestamp"
+                                                         :display_name   "type_timestamp"
+                                                         :base_type      :type/DateTime
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_timestamp" :type/DateTime]}
+                                                        {:name           "type_timestamp_with_timezone"
+                                                         :display_name   "type_timestamp_with_timezone"
+                                                         :base_type      :type/Text
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_timestamp_with_timezone" :type/Text]}
+                                                        {:name           "type_interval_year_to_month"
+                                                         :display_name   "type_interval_year_to_month"
+                                                         :base_type      :type/Text
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_interval_year_to_month" :type/Text]}
+                                                        {:name           "type_interval_day_to_second"
+                                                         :display_name   "type_interval_day_to_second"
+                                                         :base_type      :type/Text
+                                                         :source         :native
+                                                         :field_ref      [:field-literal "type_interval_day_to_second" :type/Text]}]
+                                          :native_form {:query datetime-types-query}
+                                          :results_timezone    "UTC"}}
+                         (-> (process-native-query datetime-types-query))))))
 
 ;(deftest start-of-week-test
 ;  (datasets/test-driver :athena
