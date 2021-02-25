@@ -6,6 +6,7 @@ pom.xml.asc
 /classes/
 /target/
 /checkouts/
+/maven_repository/
 .lein-deps-sum
 .lein-repl-history
 .lein-plugins/
