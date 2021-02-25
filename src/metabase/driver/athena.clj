@@ -144,7 +144,7 @@
 
 (defmethod sql.qp/->honeysql [:athena (class Field)] [driver field] (qp/->honeysql driver field))
 
-(defmethod sql.qp/unix-timestamp->timestamp [:athena :seconds] [_ _ expr] (hsql/call :from_unixtime expr))
+(defmethod sql.qp/unix-timestamp->honeysql [:athena :seconds] [_ _ expr] (hsql/call :from_unixtime expr))
 
 (defmethod sql.qp/add-interval-honeysql-form :athena [_ hsql-form amount unit]
   (hsql/call :date_add
