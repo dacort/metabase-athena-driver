@@ -152,6 +152,11 @@
              (hsql/raw (int amount))
              (hx/->timestamp hsql-form)))
 
+;; fix to allow integer division to be cast as double (float is not suported by athena)
+(defmethod sql.qp/->float :athena
+  [_ value]
+  (hx/cast :double value))
+
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
   "Given a `database-type` (e.g. `VARCHAR`) return the mapped Metabase type (e.g. `:type/Text`)."
