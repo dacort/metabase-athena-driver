@@ -2,7 +2,7 @@
   :min-lein-version "2.5.0"
 
   ; Run `make download-jar` first, to initialize in-project maven repo and download third-party jar.
-  :repositories {"local" ~(str (.toURI (java.io.File. "maven_repository")))}
+  :repositories [["athena" {:url "file:maven_repository"}]]
 
   :dependencies
   [[athena/athena-jdbc "2.0.13"]]
