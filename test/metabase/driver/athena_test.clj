@@ -129,7 +129,7 @@
                                                                    ["test-data-decimal"
                                                                     [{:field-name "my_money", :base-type {:native "Decimal(12,4)"}}]
                                                                     [[1.0] [23.1337] [42.0] [42.0]]])
-                                            (data/run-mbql-query "test-data-decimal"
+                                            (data/run-mbql-query test-data-decimal
                                                                  {:expressions {:divided [:/ 42 2]}
                                                                   :filter      [:> [:expression :divided] 1.0]
                                                                   :breakout    [[:expression :divided]]
