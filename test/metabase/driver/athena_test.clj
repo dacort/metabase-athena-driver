@@ -122,31 +122,20 @@
                                           :results_timezone    "UTC"}}
                          (-> (process-native-query datetime-types-query))))))
 
-(datasets/expect-with-driver :athena
-  21.0
-  (-> (data/dataset (tx/dataset-definition "metabase_tests_decimal"
-                      ["test-data-decimal"
-                       [{:field-name "my_money", :base-type {:native "Decimal(12,4)"}}]
-                       [[1.0] [23.1337] [42.0] [42.0]]])
-    (data/run-mbql-query "test-data-decimal"
-                         {:expressions {:divided [:/ 4 2]}
-                          :filter      [:> [:expression :divided] 1.0]
-                          :breakout    [[:expression :divided]]
-                          :order-by    [[:desc [:expression :divided]]]
-                          :limit       1}))
-      qp.test/first-row last float))
-
-(datasets/expect-with-driver :a
-  1.8155331831916208
-  (-> (data/dataset (tx/dataset-definition "metabase_tests_decimal"
-                      ["test-data-decimal"
-                       [{:field-name "my_money", :base-type {:native "Decimal(12,4)"}}]
-                       [[1.0] [23.1337] [42.0] [42.0]]])
-    (data/run-mbql-query "test-data-decimal"
-                         {:expressions {:divided [:/ 42 4]}
-                          :filter      [:= 2 2]
-                          :limit       1}))
-      qp.test/first-row last double))
+(deftest athena-float
+   (mt/test-driver :athena
+                   (is (= 21.0
+                          (-> (data/dataset (tx/dataset-definition "metabase_tests_decimal"
+                                                                   ["test-data-decimal"
+                                                                    [{:field-name "my_money", :base-type {:native "Decimal(12,4)"}}]
+                                                                    [[1.0] [23.1337] [42.0] [42.0]]])
+                                            (data/run-mbql-query "test-data-decimal"
+                                                                 {:expressions {:divided [:/ 42 2]}
+                                                                  :filter      [:> [:expression :divided] 1.0]
+                                                                  :breakout    [[:expression :divided]]
+                                                                  :order-by    [[:desc [:expression :divided]]]
+                                                                  :limit       1}))
+                              qp.test/first-row last float)))))
 ;(deftest start-of-week-test
 ;  (datasets/test-driver :athena
 ;                        (is (= [["2015-10-04" 9]]
