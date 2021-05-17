@@ -141,18 +141,11 @@ This policy provides read-only access. Note you need to specify any buckets you 
       "Action": [
         "athena:BatchGetNamedQuery",
         "athena:BatchGetQueryExecution",
-        "athena:GetCatalogs",
-        "athena:GetExecutionEngine",
-        "athena:GetExecutionEngines",
+        "athena:GetDataCatalog",
         "athena:GetNamedQuery",
-        "athena:GetNamespace",
-        "athena:GetNamespaces",
         "athena:GetQueryExecution",
-        "athena:GetQueryExecutions",
         "athena:GetQueryResults",
         "athena:GetQueryResultsStream",
-        "athena:GetTable",
-        "athena:GetTables",
         "athena:GetWorkGroup",
         "athena:ListDatabases",
         "athena:ListDataCatalogs",
@@ -183,14 +176,23 @@ This policy provides read-only access. Note you need to specify any buckets you 
       "Resource": "*"
     },
     {
-      "Sid": "S3ReadAccess",
+      "Sid": "S3BucketList",
       "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
       "Resource": [
         "arn:aws:s3:::bucket1",
-        "arn:aws:s3:::bucket1/*",
         "arn:aws:s3:::bucket2",
-        "arn:aws:s3:::bucket2/*"
+      ]
+    },
+    {
+      "Sid": "S3ReadAccess",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::bucket1/*",
       ]
     },
     {
@@ -200,10 +202,10 @@ This policy provides read-only access. Note you need to specify any buckets you 
         "s3:PutObject",
         "s3:GetObject",
         "s3:AbortMultipartUpload",
-        "s3:ListBucket",
-        "s3:GetBucketLocation"
       ],
-      "Resource": ["arn:aws:s3:::bucket2", "arn:aws:s3:::bucket2/*"]
+      "Resource": [
+        "arn:aws:s3:::bucket2/*"
+      ]
     }
   ]
 }
