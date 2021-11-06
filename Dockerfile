@@ -1,4 +1,4 @@
-FROM metabase/metabase:v0.40.2
+FROM metabase/metabase:v0.41.1
 
 # A metabase user/group is manually added in https://github.com/metabase/metabase/blob/master/bin/docker/run_metabase.sh
 # Make the UID and GID match

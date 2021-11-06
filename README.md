@@ -4,7 +4,7 @@
 
 [![CircleCI](https://img.shields.io/circleci/build/github/dacort/metabase-athena-driver)](https://circleci.com/gh/dacort/metabase-athena-driver)
 [![Latest Release](https://img.shields.io/github/v/release/dacort/metabase-athena-driver.svg?label=latest%20release&include_prereleases)](https://github.com/dacort/metabase-athena-driver/releases)
-![Tested with Metabase v0.40.2](https://img.shields.io/badge/metabase-v0.40.2-blue?)
+![Tested with Metabase v0.41.1](https://img.shields.io/badge/metabase-v0.41.1-blue?)
 [![GitHub license](https://img.shields.io/github/license/dacort/metabase-athena-driver)](https://raw.githubusercontent.com/dacort/metabase-athena-driver/master/LICENSE)
 
 ## Installation
