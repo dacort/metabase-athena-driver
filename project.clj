@@ -1,11 +1,11 @@
-(defproject metabase/athena-driver "1.0.0-athena-jdbc-2.0.13"
+(defproject metabase/athena-driver "1.0.0-athena-jdbc-2.0.25"
   :min-lein-version "2.5.0"
 
   ; Run `make download-jar` first, to initialize in-project maven repo and download third-party jar.
   :repositories [["athena" {:url "file:maven_repository"}]]
 
   :dependencies
-  [[athena/athena-jdbc "2.0.13"]]
+  [[athena/athena-jdbc "2.0.25"]]
 
   :aliases
   {"test"       ["with-profile" "+unit_tests" "test"]}
