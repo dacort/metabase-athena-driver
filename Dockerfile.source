@@ -1,0 +1,54 @@
+
+ARG METABASE_VERSION=v0.42.0-preview1
+
+FROM clojure:openjdk-11-tools-deps-slim-buster AS build
+
+# Reequirements for building the driver
+RUN apt-get update && \
+    apt-get install -y \
+    curl \
+    make \
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set our base workdir
+WORKDIR /build
+
+# We need to retrieve metabase source
+# Due to how ARG and FROM interact, we need to re-use the same ARG
+# Ref: https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+ARG METABASE_VERSION
+RUN curl -Lo - https://github.com/metabase/metabase/archive/refs/tags/${METABASE_VERSION}.tar.gz | tar -xz \
+    && mv metabase-* metabase
+
+# Driver source goes inside metabase source so we can use their build scripts
+WORKDIR /build/driver
+COPY Makefile project.clj deps.edn ./
+COPY src/ ./src
+COPY resources/ ./resources
+
+# Fetch our Athena JDBC driver
+RUN make download-jar
+
+# Now build the driver
+# WORKDIR /build/metabase
+# RUN bin/build-driver.sh athena
+
+# Now build Metabase dependencies first and then the driver
+# We need to build java deps and then spark-sql deps
+# Ref: https://github.com/metabase/metabase/wiki/Migrating-from-Leiningen-to-tools.deps#preparing-dependencies
+WORKDIR /build/metabase
+RUN clojure -X:deps prep
+WORKDIR /build/metabase/modules/drivers
+RUN clojure -X:deps prep
+
+WORKDIR /build/driver
+RUN clojure -X:dev:build
+
+# Now we can run Metabase with our built driver
+FROM metabase/metabase:${METABASE_VERSION}
+
+COPY --chown=2000:2000 --from=build \
+    /build/driver/target/athena.metabase-driver.jar \
+    /plugins/athena.metabase-driver.jar
