@@ -71,34 +71,23 @@ Guide](https://s3.amazonaws.com/athena-downloads/drivers/JDBC/SimbaAthenaJDBC_2.
 
 ### Build from source
 
-1. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
+The entire jar can now be built from the included Dockerfile.
 
-2. Clone this repo
+1. Build the project and copy the jar from the export stage
 
-   ```shell
-   git clone https://github.com/dacort/metabase-athena-driver
-   cd metabase-athena-driver/
-   ```
+```shell
+docker build --output jars -f Dockerfile.source --target stg_export .
+```
 
-3. Download the Athena driver into a local in-project Maven repo
+You should now have a `athena.metabase-driver.jar` file in the `jars/` directory.
 
-   ```shell
-   make download-jar
-   ```
+2. Download a fairly recent Metabase binary release (jar file) from the [Metabase distribution page](https://metabase.com/start/jar.html).
 
-4. Build the jar
-
-   ```shell
-   make build
-   # Alternative:
-   #   DEBUG=1 LEIN_SNAPSHOTS_IN_RELEASE=true lein uberjar
-   ```
-
-5. Let's assume we download `metabase.jar` to `~/metabae/` and we built the project above. Copy the built jar to the Metabase plugins directly and run Metabase from there!
+3. Let's assume we download `metabase.jar` to `~/metabae/` and we built the project above. Copy the built jar to the Metabase plugins directly and run Metabase from there!
    ```shell
    TARGET_DIR=~/metabae
    mkdir ${TARGET_DIR}/plugins/
-   cp target/uberjar/athena.metabase-driver.jar ${TARGET_DIR}/plugins/
+   cp jars/athena.metabase-driver.jar ${TARGET_DIR}/plugins/
    cd ${TARGET_DIR}/
    java -jar metabase.jar
    ```
@@ -119,10 +108,11 @@ There are two different sets of tests in the project.
 
 The reason they're split out is because the integration tests require us to [link the driver](https://github.com/metabase/metabase/wiki/Writing-a-Driver:-Adding-Test-Extensions,-Tests,-and-Setting-up-CI#file-organization) into the core Metabase code and run the full suite of tests there. I wanted to be able to have some lightweight unit tests that could be run without that overhead, so those are split out into the `test_unit/` directory.
 
-To run the basic unit tests, just run:
+Running the tests requires you to have the metabase source relevant to the version you're building against. To make this easier, you can also run tests from the Dockerfile.
 
 ```shell
-lein test
+docker build -t metabase/athena-test -f Dockerfile.source . --target stg_test
+docker run -it --rm --name mb-test metabase/athena-test
 ```
 
 ## Resources
@@ -249,3 +239,25 @@ If your customer-base needs access to create tables for whatever reason, they wi
   - If this happens, configure a higher timeout value with the `MB_DB_CONNECTION_TIMEOUT_MS` environment variable
 - ~~Heavily nested fields can result in a `StackOverflowError`~~
   - ~~If this happens, increase the `-Xss` JVM parameter~~
+
+## Updated Dockerfile
+
+### Test image
+
+```shell
+docker build -t metabase/athena-test -f Dockerfile.source . --target stg_test
+docker run -it --rm --name mb-test metabase/athena-test
+```
+
+### Copy jars
+
+```shell
+docker build --output jars -f Dockerfile.source --target stg_export .
+```
+
+### Run Metabase
+
+```shell
+docker build -t metabase/athena -f Dockerfile.source .
+docker run --rm --name metabase-athena -p 3000:3000 metabase/athena
+```

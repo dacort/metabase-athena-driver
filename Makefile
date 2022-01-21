@@ -12,6 +12,3 @@ maven_repository/athena/athena-jdbc/$(JAR_VERSION)/athena-jdbc-${JAR_VERSION}.ja
 		&& sha1sum athena-jdbc-${JAR_VERSION}.jar | cut -f "1" -d " " > athena-jdbc-${JAR_VERSION}.jar.sha1
 
 download-jar: maven_repository/athena/athena-jdbc/$(JAR_VERSION)/athena-jdbc-${JAR_VERSION}.jar.sha1
-
-build: download-jar
-	DEBUG=1 LEIN_SNAPSHOTS_IN_RELEASE=true lein uberjar
