@@ -13,7 +13,7 @@ Beginning with Metabase 0.32, drivers must be stored in a `plugins` directory in
 
 ### Docker
 
-This repository has an example [`Dockerfile`](./Dockerfile) you can use to run Metabase with the Amazon Athena driver pre-loaded:
+This repository has an example [`Dockerfile`](./Dockerfile) you can use to build the Amazon Athena Metabase driver and run the most recent supported version of Metabase:
 
 ```shell
 git clone https://github.com/dacort/metabase-athena-driver.git
@@ -76,7 +76,7 @@ The entire jar can now be built from the included Dockerfile.
 1. Build the project and copy the jar from the export stage
 
 ```shell
-docker build --output jars -f Dockerfile.source --target stg_export .
+docker build --output jars --target stg_export .
 ```
 
 You should now have a `athena.metabase-driver.jar` file in the `jars/` directory.
@@ -111,7 +111,7 @@ The reason they're split out is because the integration tests require us to [lin
 Running the tests requires you to have the metabase source relevant to the version you're building against. To make this easier, you can also run tests from the Dockerfile.
 
 ```shell
-docker build -t metabase/athena-test -f Dockerfile.source . --target stg_test
+docker build -t metabase/athena-test . --target stg_test
 docker run -it --rm --name mb-test metabase/athena-test
 ```
 
@@ -245,19 +245,19 @@ If your customer-base needs access to create tables for whatever reason, they wi
 ### Test image
 
 ```shell
-docker build -t metabase/athena-test -f Dockerfile.source . --target stg_test
+docker build -t metabase/athena-test --target stg_test .
 docker run -it --rm --name mb-test metabase/athena-test
 ```
 
 ### Copy jars
 
 ```shell
-docker build --output jars -f Dockerfile.source --target stg_export .
+docker build --output jars --target stg_export .
 ```
 
 ### Run Metabase
 
 ```shell
-docker build -t metabase/athena -f Dockerfile.source .
+docker build -t metabase/athena .
 docker run --rm --name metabase-athena -p 3000:3000 metabase/athena
 ```
