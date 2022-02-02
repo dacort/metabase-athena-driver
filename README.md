@@ -111,8 +111,8 @@ The reason they're split out is because the integration tests require us to [lin
 Running the tests requires you to have the metabase source relevant to the version you're building against. To make this easier, you can also run tests from the Dockerfile.
 
 ```shell
-docker build -t metabase/athena-test . --target stg_test
-docker run -it --rm --name mb-test metabase/athena-test
+docker build -t metabase/athena-test --target stg_test .
+docker run --rm --name mb-test metabase/athena-test
 ```
 
 ## Resources
