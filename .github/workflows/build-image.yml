@@ -17,8 +17,8 @@ jobs:
       - name: Maven cache
         uses: actions/cache@v1
         with:
-          path: /root/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-maven-
       -

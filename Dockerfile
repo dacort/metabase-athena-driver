@@ -38,9 +38,12 @@ COPY resources/ ./resources
 # We need to build java deps and then spark-sql deps
 # Ref: https://github.com/metabase/metabase/wiki/Migrating-from-Leiningen-to-tools.deps#preparing-dependencies
 WORKDIR /build/metabase
-RUN clojure -X:deps prep
+RUN --mount=type=cache,target=/root/.m2/repository \
+    clojure -X:deps prep
+
 WORKDIR /build/metabase/modules/drivers
-RUN clojure -X:deps prep
+RUN --mount=type=cache,target=/root/.m2/repository \
+    clojure -X:deps prep
 WORKDIR /build/driver
 
 # Test stage
@@ -52,14 +55,15 @@ CMD ["clojure", "-X:test"]
 
 # Now build the driver
 FROM stg_base as stg_build
-RUN clojure -X:dev:build
+RUN --mount=type=cache,target=/root/.m2/repository \
+    clojure -X:dev:build
 
 # We create an export stage to make it easy to export the driver
 FROM scratch as stg_export
 COPY --from=stg_build /build/driver/target/athena.metabase-driver.jar /
 
 # Now we can run Metabase with our built driver
-FROM metabase/metabase:${METABASE_VERSION}
+FROM metabase/metabase:${METABASE_VERSION} AS stg_runner
 
 # A metabase user/group is manually added in https://github.com/metabase/metabase/blob/master/bin/docker/run_metabase.sh
 # Make the UID and GID match
