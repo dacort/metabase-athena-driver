@@ -5,6 +5,7 @@ pom.xml.asc
 /lib/
 /classes/
 /target/
+/jars/
 /checkouts/
 /maven_repository/
 .lein-deps-sum

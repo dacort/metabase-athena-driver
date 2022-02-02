@@ -22,8 +22,8 @@ driver:
       display-name: Access Key
     - merge:
         - password
-        - name: secret_key
         - display-name: Secret Key
+          name: secret_key
     - merge:
         - additional-options
         - display-name: Additional Athena connection string options

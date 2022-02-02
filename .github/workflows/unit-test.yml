@@ -1,0 +1,25 @@
+name: unit-test
+
+on:
+  push:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          load: true
+          tags: metabase-athena-test
+          target: stg_test
+      - name: Test
+        run: |
+          docker run --rm metabase-athena-test
