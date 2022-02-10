@@ -24,10 +24,12 @@ driver:
         - password
         - display-name: Secret Key
           name: secret_key
+    - advanced-options-start
     - merge:
         - additional-options
         - display-name: Additional Athena connection string options
           placeholder: "UseResultsetStreaming=0;LogLevel=6"
+    - default-advanced-options
 init:
   - step: load-namespace
     namespace: metabase.driver.athena
