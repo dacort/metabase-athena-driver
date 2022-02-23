@@ -131,18 +131,10 @@ This policy provides read-only access. Note you need to specify any buckets you 
       "Action": [
         "athena:BatchGetNamedQuery",
         "athena:BatchGetQueryExecution",
-        "athena:GetCatalogs",
-        "athena:GetExecutionEngine",
-        "athena:GetExecutionEngines",
         "athena:GetNamedQuery",
-        "athena:GetNamespace",
-        "athena:GetNamespaces",
         "athena:GetQueryExecution",
-        "athena:GetQueryExecutions",
         "athena:GetQueryResults",
         "athena:GetQueryResultsStream",
-        "athena:GetTable",
-        "athena:GetTables",
         "athena:GetWorkGroup",
         "athena:ListDatabases",
         "athena:ListDataCatalogs",
@@ -152,7 +144,10 @@ This policy provides read-only access. Note you need to specify any buckets you 
         "athena:ListWorkGroups",
         "athena:ListTableMetadata",
         "athena:StartQueryExecution",
-        "athena:StopQueryExecution"
+        "athena:StopQueryExecution",
+        "athena:CreatePreparedStatement",
+        "athena:DeletePreparedStatement",
+        "athena:GetPreparedStatement"
       ],
       "Resource": "*"
     },
