@@ -152,10 +152,19 @@
              (hsql/raw (int amount))
              (hx/->timestamp hsql-form)))
 
-;; fix to allow integer division to be cast as double (float is not suported by athena)
+;; fix to allow integer division to be cast as double (float is not supported by athena)
 (defmethod sql.qp/->float :athena
   [_ value]
   (hx/cast :double value))
+
+;; Support for median/percentile functions
+(defmethod sql.qp/->honeysql [:athena :median]
+  [driver [_ arg]]
+  (hsql/call :approx_percentile (sql.qp/->honeysql driver arg) 0.5))
+
+(defmethod sql.qp/->honeysql [:athena :percentile]
+  [driver [_ arg p]]
+  (hsql/call :approx_percentile (sql.qp/->honeysql driver arg) (sql.qp/->honeysql driver p)))
 
 ;; keyword function converts database-type variable to a symbol, so we use symbols above to map the types
 (defn- database-type->base-type-or-warn
