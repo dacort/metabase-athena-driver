@@ -1,5 +1,5 @@
 
-ARG METABASE_VERSION=v0.43.1
+ARG METABASE_VERSION=v0.44.2
 
 FROM clojure:openjdk-11-tools-deps-slim-buster AS stg_base
 
