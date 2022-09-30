@@ -52,7 +52,7 @@
     (string/starts-with? region "cn-") ".amazonaws.com.cn"
     :else ".amazonaws.com"))
 
-(defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db], :as details}]
+(defmethod sql-jdbc.conn/connection-details->spec :athena [_ {:keys [region access_key secret_key s3_staging_dir workgroup db catalog], :as details}]
   (-> (merge
        {:classname        "com.simba.athena.jdbc.Driver"
         :subprotocol      "awsathena"
@@ -62,11 +62,13 @@
         :s3_staging_dir   s3_staging_dir
         :workgroup        workgroup
         :AwsRegion        region
-    ; :LogLevel    6
         }
        (when (string/blank? access_key)
          {:AwsCredentialsProviderClass "com.simba.athena.amazonaws.auth.DefaultAWSCredentialsProviderChain"})
-       (dissoc details :db))
+       (when-not (string/blank? catalog)
+         {:MetadataRetrievalMethod "ProxyAPI"
+          :Catalog catalog})
+       (dissoc details :db :catalog))
       (sql-jdbc.common/handle-additional-options details, :seperator-style :semicolon)))
 
 ;;; ------------------------------------------------- sql-jdbc.sync --------------------------------------------------
@@ -243,31 +245,33 @@
 ;; Becuse describe-table-fields might fail, we catch the error here and return an empty set of columns
 
 
-(defmethod driver/describe-table :athena [driver database table]
+(defmethod driver/describe-table :athena [driver {{:keys [catalog] :as details} :details :as database} table]
   (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
     (->> (assoc (select-keys table [:name :schema])
                 :fields (try
-                          (describe-table-fields metadata database driver table)
+                          (describe-table-fields metadata database driver table catalog)
                           (catch Throwable e (set nil)))))))
 
 ;; Athena can query EXTERNAL and MANAGED tables
 (defn- get-tables [^DatabaseMetaData metadata, ^String schema-or-nil, ^String db-name-or-nil]
   ;; tablePattern "%" = match all tables
   (with-open [rs (.getTables metadata db-name-or-nil schema-or-nil "%"
-                             (into-array String ["EXTERNAL_TABLE", "EXTERNAL TABLE" "TABLE", "VIEW", "VIRTUAL_VIEW", "FOREIGN TABLE", "MATERIALIZED VIEW", "MANAGED_TABLE"]))]
+                             (into-array String ["EXTERNAL_TABLE", "EXTERNAL TABLE", "EXTERNAL", "TABLE", "VIEW", "VIRTUAL_VIEW", "FOREIGN TABLE", "MATERIALIZED VIEW", "MANAGED_TABLE"]))]
     (vec (jdbc/metadata-result rs))))
 
 ;; Required because we're calling our own custom private get-tables method to support Athena
 (defn- fast-active-tables [driver, ^DatabaseMetaData metadata, & [db-name-or-nil]]
   ;; TODO: Catch errors here so a single exception doesn't fail the entire schema
+
+  ;; Also we're creating a set here, so even if we set "ProxyAPI", we'll miss dupe database names
   (with-open [rs (.getSchemas metadata)]
-    (let [all-schemas (set (map :table_schem (jdbc/metadata-result rs)))
+    (let [all-schemas (if db-name-or-nil (filter #(= (:table_catalog %) db-name-or-nil) (jdbc/metadata-result rs)) (jdbc/metadata-result rs))
           schemas     (set/difference all-schemas (sql-jdbc.sync/excluded-schemas driver))]
       (set (for [schema schemas
-                 table  (get-tables metadata schema db-name-or-nil)]
+                 table  (get-tables metadata (:table_schem schema) (:table_catalog schema))]
              (let [remarks (:remarks table)]
                {:name        (:table_name table)
-                :schema      schema
+                :schema      (:table_schem schema)
                 :description (when-not (string/blank? remarks)
                                remarks)}))))))
 
@@ -276,9 +280,9 @@
 ;   #{"database_name"})
 
 ; If we want to limit the initial connection to a specific database/schema, I think we'd have to do that here...
-(defmethod driver/describe-database :athena [driver database]
+(defmethod driver/describe-database :athena [driver {{:keys [catalog schema] :as details} :details :as database}]
   {:tables (jdbc/with-db-metadata [metadata (sql-jdbc.conn/db->pooled-connection-spec database)]
-             (fast-active-tables driver metadata))})
+             (fast-active-tables driver metadata catalog))})
 
 ; Unsure if this is the right way to approach building the parameterized query...but it works
 (defn- prepare-query [driver {:keys [database settings], query :native, :as outer-query}]

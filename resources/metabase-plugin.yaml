@@ -18,12 +18,27 @@ driver:
     - name: s3_staging_dir
       display-name: S3 Staging dir
       default: s3://your_bucket
+    - merge:
+      - dbname
+      - name: catalog
+        placeholder: AwsDataCatalog
+        display-name: Catalog
+        helper-text: Use a different data catalog (if you have federated queries, for example)
+        required: false
+    - name: iam_keys
+      type: boolean
+      display-name: "Use hard-coded IAM credentials (not recommended)"
+      default: false
     - name: access_key
       display-name: Access Key
+      visible-if:
+        iam_keys: true
     - merge:
         - password
         - display-name: Secret Key
           name: secret_key
+          visible-if:
+            iam_keys: true
     - advanced-options-start
     - merge:
         - additional-options

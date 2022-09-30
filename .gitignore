@@ -16,3 +16,6 @@ pom.xml.asc
 .cpcache/
 .idea/
 *.iml
+.clj-kondo/
+.DS_Store
+.eastwood
