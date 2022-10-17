@@ -256,3 +256,12 @@ docker build --output jars --target stg_export .
 docker build -t metabase/athena .
 docker run --rm --name metabase-athena -p 3000:3000 metabase/athena
 ```
+
+If you have an existing Metabase database you'd like to use, you can use the following command.
+
+```shell
+docker run --rm  -p 3000:3000 \
+  -v ~/metabase-data:/metabase-data \
+  -e MB_DB_FILE=/metabase-data/metabase.db \
+  --name metabase-athena metabase/athena
+```
