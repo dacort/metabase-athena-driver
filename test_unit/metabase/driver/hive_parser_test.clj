@@ -15,3 +15,18 @@
     (is (=
          {:grouperrors "string" :grouperrorsorder [] :fielderrors {:reviewtext {:field "string"} :title {:field "string"}} :fielderrorsorder []}
          (hive-schema->map "struct<grouperrors:string,grouperrorsorder:array<string>,fielderrors:struct<reviewtext:struct<field:string>,title:struct<field:string>>,fielderrorsorder:array<string>>")))))
+
+    (is (=
+         [{:customerid "string" :Order "bigint"}]
+         (hive-schema->map "array<struct<customerid:string,Order:bigint>>")))
+
+    (is (=
+         {:accredited_buyer_representative_abr "boolean"}
+         (hive-schema->map "struct<accredited_buyer_representative_abr: boolean>")))
+
+    (is (=
+         {:mediacategory "string" :mediakey "string" :mediaurl "string" :order "bigint"}
+         (hive-schema->map "struct<mediacategory: string, mediakey: string, mediaurl: string, order: bigint>")))
+
+    
+
