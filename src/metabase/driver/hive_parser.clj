@@ -28,12 +28,12 @@
              (str result "{"))
 
       (clojure.string/starts-with? schema ":")
-      (recur (clojure.string/replace-first schema #":" "")
+      (recur (clojure.string/replace-first schema #":\s*" "")
              closes
              (str result ":"))
 
       (clojure.string/starts-with? schema ",")
-      (recur (clojure.string/replace-first schema #"," "")
+      (recur (clojure.string/replace-first schema #",\s*" "")
              closes
              (str result ","))
 
