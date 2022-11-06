@@ -126,8 +126,8 @@
 
 ; If `expr` is a date, we need to cast it to a timestamp before we can truncate to a finer granularity
 ; Ideally, we should make this conditional. There's a generic approach above, but different use cases should b tested.
-(defmethod sql.qp/date [:athena :minute]          [_ _ expr] (hsql/call :date_trunc (hx/literal :minute) (expr->literal expr)))
-(defmethod sql.qp/date [:athena :hour]            [_ _ expr] (hsql/call :date_trunc (hx/literal :hour) (expr->literal expr)))
+(defmethod sql.qp/date [:athena :minute]          [_ _ expr] (hsql/call :date_trunc (hx/literal :minute) expr))
+(defmethod sql.qp/date [:athena :hour]            [_ _ expr] (hsql/call :date_trunc (hx/literal :hour) expr))
 (defmethod sql.qp/date [:athena :day]             [_ _ expr] (hsql/call :date_trunc (hx/literal :day) expr))
 (defmethod sql.qp/date [:athena :week]            [_ _ expr] (hsql/call :date_trunc (hx/literal :week) expr))
 (defmethod sql.qp/date [:athena :month]           [_ _ expr] (hsql/call :date_trunc (hx/literal :month) expr))
@@ -152,7 +152,7 @@
   (hsql/call :date_add
              (hx/literal (name unit))
              (hsql/raw (int amount))
-             (hx/->timestamp hsql-form)))
+             hsql-form))
 
 ;; fix to allow integer division to be cast as double (float is not supported by athena)
 (defmethod sql.qp/->float :athena
